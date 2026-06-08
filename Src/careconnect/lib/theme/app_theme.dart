@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary
-  static const Color primary = Color(0xFF1A3FB0);       // Deep blue — high contrast
+  static const Color primary = Color(0xFF1A3FB0);       // Deep blue - high contrast
   static const Color primaryLight = Color(0xFFE8EEFF);
   static const Color accent = Color(0xFF2D7DD2);
 

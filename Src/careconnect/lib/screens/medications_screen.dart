@@ -1,69 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
 import '../components/widgets.dart';
+import '../models/medication.dart';
+import '../providers/medications_provider.dart';
 
-class _Medication {
-  final String id, name, dose, schedule;
-  final List<String> times;
-  bool taken;
-
-  _Medication({
-    required this.id,
-    required this.name,
-    required this.dose,
-    required this.schedule,
-    required this.times,
-    this.taken = false,
-  });
-}
-
-class MedicationsScreen extends StatefulWidget {
+class MedicationsScreen extends ConsumerStatefulWidget {
   const MedicationsScreen({super.key});
 
   @override
-  State<MedicationsScreen> createState() => _MedicationsScreenState();
+  ConsumerState<MedicationsScreen> createState() => _MedicationsScreenState();
 }
 
-class _MedicationsScreenState extends State<MedicationsScreen> {
-  // TODO: We need to replace this with a real provider
-  final List<_Medication> _meds = [
-    _Medication(id: '1', name: 'Lisinopril',    dose: '10 mg',  schedule: 'Daily',        times: ['8:00 AM']),
-    _Medication(id: '2', name: 'Metformin',     dose: '500 mg', schedule: 'Twice daily',  times: ['8:00 AM', '8:00 PM'], taken: true),
-    _Medication(id: '3', name: 'Atorvastatin',  dose: '20 mg',  schedule: 'Daily',        times: ['9:00 PM']),
-    _Medication(id: '4', name: 'Aspirin',       dose: '81 mg',  schedule: 'Daily',        times: ['8:00 AM']),
-    _Medication(id: '5', name: 'Levothyroxine', dose: '75 mcg', schedule: 'Daily',        times: ['7:00 AM'], taken: true),
-    _Medication(id: '6', name: 'Omeprazole',    dose: '20 mg',  schedule: 'Daily',        times: ['7:30 AM']),
-  ];
+class _MedicationsScreenState extends ConsumerState<MedicationsScreen> {
+  final Map<String, bool> _cooling = {};
 
-  String _searchQuery = '';
-  String? _lastUndoneId;    
-  final Map<String, bool> _cooling = {}; 
+  Future<void> _markTaken(String id, String name) async {
+    if (_cooling[id] == true) return;
+    HapticFeedback.mediumImpact();
 
-  List<_Medication> get _filtered => _meds.where((m) {
-    if (_searchQuery.isEmpty) return true;
-    return m.name.toLowerCase().contains(_searchQuery.toLowerCase());
-  }).toList();
+    setState(() => _cooling[id] = true);
+    ref.read(medicationsProvider.notifier).markTaken(id);
 
-  int get _takenCount => _meds.where((m) => m.taken).length;
-  int get _upcomingCount => _meds.where((m) => !m.taken).length;
-
-  Future<void> _markTaken(String id) async {
-    if (_cooling[id] == true) return; // STML #22: debounce guard
-    HapticFeedback.mediumImpact();    // STML #17: immediate feedback
-
-    setState(() {
-      _cooling[id] = true;
-      final med = _meds.firstWhere((m) => m.id == id);
-      med.taken = true;
-      _lastUndoneId = null;
-    });
-
-    final med = _meds.firstWhere((m) => m.id == id);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${med.name} marked as taken'),
+        content: Text('$name marked as taken'),
         duration: const Duration(seconds: 5),
         action: SnackBarAction(
           label: 'Undo',
@@ -80,16 +43,13 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
 
   void _undo(String id) {
     HapticFeedback.lightImpact();
-    setState(() {
-      final med = _meds.firstWhere((m) => m.id == id);
-      med.taken = false;
-      _lastUndoneId = id;
-    });
+    ref.read(medicationsProvider.notifier).undoTaken(id);
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filtered;
+    final state = ref.watch(medicationsProvider);
+    final filtered = state.filtered;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -112,14 +72,12 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
           ),
         ],
       ),
-
       body: Column(
         children: [
           ContextBar(
             screenLabel: 'Home › My Medications',
             onHome: () => Navigator.of(context).pop(),
           ),
-
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -129,34 +87,35 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                   Semantics(
                     label: 'Search medications',
                     child: TextField(
-                      onChanged: (v) => setState(() => _searchQuery = v),
+                      onChanged: (v) =>
+                          ref.read(medicationsProvider.notifier).setSearchQuery(v),
                       style: AppTextStyles.bodyLarge,
                       decoration: InputDecoration(
                         hintText: 'Search medications…',
                         prefixIcon: const Icon(Icons.search_outlined),
-                        suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () => setState(() => _searchQuery = ''),
-                              tooltip: 'Clear search',
-                            )
-                          : null,
+                        suffixIcon: state.searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () => ref
+                                    .read(medicationsProvider.notifier)
+                                    .setSearchQuery(''),
+                                tooltip: 'Clear search',
+                              )
+                            : null,
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
-
                   Row(
                     children: [
-                      Expanded(child: StatCard(icon: Icons.medication, iconColor: AppColors.primary, value: '${_meds.length}', label: 'Total Medications')),
+                      Expanded(child: StatCard(icon: Icons.medication, iconColor: AppColors.primary, value: '${state.medications.length}', label: 'Total Medications')),
                       const SizedBox(width: 12),
-                      Expanded(child: StatCard(icon: Icons.check_circle_outline, iconColor: AppColors.success, value: '$_takenCount', label: 'Taken Today')),
+                      Expanded(child: StatCard(icon: Icons.check_circle_outline, iconColor: AppColors.success, value: '${state.takenCount}', label: 'Taken Today')),
                       const SizedBox(width: 12),
-                      Expanded(child: StatCard(icon: Icons.schedule, iconColor: AppColors.warning, value: '$_upcomingCount', label: 'Upcoming')),
+                      Expanded(child: StatCard(icon: Icons.schedule, iconColor: AppColors.warning, value: '${state.upcomingCount}', label: 'Upcoming')),
                     ],
                   ),
                   const SizedBox(height: 24),
-
                   if (filtered.isEmpty)
                     Center(
                       child: Padding(
@@ -170,13 +129,13 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                     )
                   else
                     ...filtered.map((med) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: _MedicationCard(
-                        med: med,
-                        isCooling: _cooling[med.id] == true,
-                        onMarkTaken: () => _markTaken(med.id),
-                      ),
-                    )),
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _MedicationCard(
+                            med: med,
+                            isCooling: _cooling[med.id] == true,
+                            onMarkTaken: () => _markTaken(med.id, med.name),
+                          ),
+                        )),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -195,7 +154,7 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
 }
 
 class _MedicationCard extends StatelessWidget {
-  final _Medication med;
+  final Medication med;
   final bool isCooling;
   final VoidCallback onMarkTaken;
 
@@ -205,15 +164,8 @@ class _MedicationCard extends StatelessWidget {
     required this.onMarkTaken,
   });
 
-  Color get _borderColor {
-    if (med.taken) return AppColors.success;
-    return AppColors.primary;
-  }
-
-  Color get _bgColor {
-    if (med.taken) return AppColors.successBg;
-    return AppColors.infoBg;
-  }
+  Color get _borderColor => med.taken ? AppColors.success : AppColors.primary;
+  Color get _bgColor => med.taken ? AppColors.successBg : AppColors.infoBg;
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +181,6 @@ class _MedicationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Header row ─────────────────────────────────────────────────
             Row(
               children: [
                 Expanded(
@@ -265,8 +216,6 @@ class _MedicationCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-
-            // ── Schedule ───────────────────────────────────────────────────
             Row(children: [
               const Icon(Icons.schedule, size: 16, color: AppColors.textMuted),
               const SizedBox(width: 6),
@@ -279,8 +228,6 @@ class _MedicationCard extends StatelessWidget {
               Text(med.schedule, style: AppTextStyles.bodyMedium),
             ]),
             const SizedBox(height: 14),
-
-            // ── Action button (STML #22: debounced; #28: linear action) ───
             if (!med.taken)
               Semantics(
                 button: true,
@@ -288,11 +235,11 @@ class _MedicationCard extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: isCooling ? null : onMarkTaken,
                   icon: isCooling
-                    ? const SizedBox(
-                        width: 18, height: 18,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check_circle_outline),
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check_circle_outline),
                   label: Text(isCooling ? 'Marking…' : 'Mark as Taken'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 52),
@@ -303,7 +250,7 @@ class _MedicationCard extends StatelessWidget {
               )
             else
               OutlinedButton.icon(
-                onPressed: null, // Taken — read-only
+                onPressed: null,
                 icon: const Icon(Icons.check_circle, color: AppColors.success),
                 label: const Text('Taken', style: TextStyle(color: AppColors.success)),
                 style: OutlinedButton.styleFrom(
