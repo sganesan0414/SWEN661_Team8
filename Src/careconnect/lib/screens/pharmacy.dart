@@ -1,38 +1,21 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../components/widgets.dart';
-import 'medications_screen.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class PharmacyScreen extends StatefulWidget {
+  const PharmacyScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  State<PharmacyScreen> createState() => _PharmacyScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
-  int _navIndex = 0;
-
-  // TODO: Fake data
-  static const _userName = 'Siva';
-  static const _todayLabel = 'Tuesday, June 3';
-
-  void _onNavTap(int index) {
-    setState(() => _navIndex = index);
-    // TODO: we need to  use go_router / Navigator to push named routes
-    if (index == 1) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const MedicationsScreen()),
-      );
-    }
-  }
-
+class _PharmacyScreenState extends State<PharmacyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('MemoGuard'),
+        title: const Text('CareConnect'),
         actions: [
           Semantics(
             button: true,
@@ -40,7 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: TextButton.icon(
               onPressed: () {},
               icon: const Icon(Icons.logout_outlined, color: Colors.white, size: 20),
-              label: const Text('Sign out', style: TextStyle(color: Colors.white)),
+              label: const Text('Logout', style: TextStyle(color: Colors.white)),
             ),
           ),
         ],
@@ -48,282 +31,418 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Column(
         children: [
           const ContextBar(
-            screenLabel: 'Home — Daily Overview',
+            screenLabel: 'Pharmacy — My Pharmacies',
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          LabeledBackButton(
+                            label: 'Dashboard',
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                          const SizedBox(height: 16),
+                          Text('My Pharmacies', style: AppTextStyles.displayLarge),
+                          const SizedBox(height: 4),
+                          Text('1 prescription ready + 1 need refill',
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted)),
+                          const SizedBox(height: 24),
+
+                          // Current Prescriptions
+                          Text('Current Prescriptions', style: AppTextStyles.headlineMedium),
+                          const SizedBox(height: 16),
+                          _PrescriptionCard(
+                            name: 'Atorvastatin 20mg',
+                            pharmacy: 'CVS Pharmacy',
+                            pickupDate: 'June 10, 2026',
+                            refills: '0 remaining',
+                            cost: '\$18.75',
+                            status: 'Refill Needed',
+                            statusColor: AppColors.error,
+                            showRefillWarning: true,
+                          ),
+                          const SizedBox(height: 16),
+                          _PrescriptionCard(
+                            name: 'Lisinopril 10mg',
+                            pharmacy: 'CVS Pharmacy',
+                            pickupDate: 'June 5, 2026',
+                            refills: '2 remaining',
+                            cost: '\$12.50',
+                            status: 'Ready for Pickup',
+                            statusColor: const Color(0xFF1A7A4A),
+                            showRefillWarning: false,
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Nearby Pharmacies
+                          Text('Nearby Pharmacies', style: AppTextStyles.headlineMedium),
+                          const SizedBox(height: 16),
+                          _PharmacyCard(
+                            name: 'CVS Pharmacy',
+                            isPrimary: true,
+                            rating: 4.5,
+                            address: '123 Main Street, San Francisco, CA 94102',
+                            distance: '0.5 miles away',
+                            phone: '(555) 123-4567',
+                            hours: 'Open until 10:00 PM',
+                          ),
+                          const SizedBox(height: 16),
+                          _PharmacyCard(
+                            name: 'Walgreens',
+                            rating: 4.3,
+                            address: '456 Market Street, San Francisco, CA 94103',
+                            distance: '1.2 miles away',
+                            phone: '(555) 234-5678',
+                            hours: 'Open 24 hours',
+                          ),
+                          const SizedBox(height: 16),
+                          _PharmacyCard(
+                            name: 'Rite Aid',
+                            rating: 4.1,
+                            address: '789 Mission Street, San Francisco, CA 94104',
+                            distance: '1.8 miles away',
+                            phone: '(555) 345-6789',
+                            hours: 'Open until 9:00 PM',
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Good Morning, $_userName',
-                          style: AppTextStyles.displayLarge.copyWith(color: Colors.white),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _todayLabel,
-                          style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
-                        ),
-                        const SizedBox(height: 20),
-                        // ── Stat cards ──────────────────────────────────────
-                        LayoutBuilder(builder: (context, constraints) {
-                          final w = (constraints.maxWidth - 16) / 3;
-                          return Row(
-                            children: [
-                              _MiniStatCard(value: '5/6', label: 'Medications\nToday', icon: Icons.medication, iconColor: AppColors.accent, width: w),
-                              const SizedBox(width: 8),
-                              _MiniStatCard(value: '94%', label: 'Adherence\nRate', icon: Icons.trending_up, iconColor: const Color(0xFF1A7A4A), width: w),
-                              const SizedBox(width: 8),
-                              _MiniStatCard(value: 'Jun 15', label: 'Next\nAppointment', icon: Icons.calendar_today, iconColor: AppColors.accent, width: w),
-                            ],
-                          );
-                        }),
-                      ],
+                    const SizedBox(width: 24),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Insurance Info Card
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Blue Cross Blue Shield',
+                                  style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700)),
+                                const SizedBox(height: 16),
+                                Text('Member ID', style: AppTextStyles.labelSmall),
+                                const SizedBox(height: 4),
+                                Text('ABC123456789',
+                                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 12),
+                                Text('Group', style: AppTextStyles.labelSmall),
+                                const SizedBox(height: 4),
+                                Text('GRP987654',
+                                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  Text('Quick Actions', style: AppTextStyles.headlineMedium),
-                  const SizedBox(height: 14),
-                  GridView.count(
-                    crossAxisCount: 4,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.9,
-                    children: [
-                      QuickActionTile(
-                        icon: Icons.medication_outlined,
-                        iconColor: AppColors.primary,
-                        label: 'My\nMedications',
-                        onTap: () => _onNavTap(1),
-                      ),
-                      QuickActionTile(
-                        icon: Icons.calendar_today_outlined,
-                        iconColor: const Color(0xFF7B3FA0),
-                        label: 'Appointments',
-                        onTap: () {},
-                      ),
-                      QuickActionTile(
-                        icon: Icons.notifications_outlined,
-                        iconColor: const Color(0xFFB85C00),
-                        label: 'Reminders',
-                        onTap: () {},
-                      ),
-                      QuickActionTile(
-                        icon: Icons.favorite_outline,
-                        iconColor: const Color(0xFFB0193C),
-                        label: 'Health\nMetrics',
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  AlertBanner(
-                    icon: Icons.warning_amber_rounded,
-                    title: 'Refill Reminder',
-                    body: 'Atorvastatin has only 2 refills remaining. Request a refill soon.',
-                    actionLabel: 'Request Refill',
-                    onAction: () {},
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Upcoming Medications ──────────────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Upcoming Medications', style: AppTextStyles.headlineMedium),
-                      TextButton(
-                        onPressed: () => _onNavTap(1),
-                        child: const Text('View All'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ..._upcomingMeds.map((med) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _UpcomingMedRow(med: med),
-                  )),
-                  const SizedBox(height: 24),
-
-                  // ── Next appointment card ─────────────────────────────────
-                  Text('Next Appointment', style: AppTextStyles.headlineMedium),
-                  const SizedBox(height: 12),
-                  _AppointmentCard(
-                    doctorName: 'Dr. Sarah Johnson',
-                    examType: 'Annual Physical Exam',
-                    date: 'June 15, 2026',
-                    time: '10:00 AM',
-                  ),
-                  const SizedBox(height: 32),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: CareConnectBottomNav(
-        currentIndex: _navIndex,
-        onTap: _onNavTap,
-      ),
     );
   }
 }
 
-class _MedData {
-  final String name, dose, time;
-  final bool dueSoon;
-  const _MedData({required this.name, required this.dose, required this.time, this.dueSoon = false});
-}
+class _PrescriptionCard extends StatelessWidget {
+  final String name;
+  final String pharmacy;
+  final String pickupDate;
+  final String refills;
+  final String cost;
+  final String status;
+  final Color statusColor;
+  final bool showRefillWarning;
 
-const _upcomingMeds = [
-  _MedData(name: 'Lisinopril', dose: '10 mg', time: '8:00 AM', dueSoon: true),
-  _MedData(name: 'Metformin', dose: '500 mg', time: '8:00 AM', dueSoon: true),
-  _MedData(name: 'Aspirin', dose: '81 mg', time: '8:00 AM', dueSoon: true),
-];
-
-class _UpcomingMedRow extends StatelessWidget {
-  final _MedData med;
-  const _UpcomingMedRow({required this.med});
+  const _PrescriptionCard({
+    required this.name,
+    required this.pharmacy,
+    required this.pickupDate,
+    required this.refills,
+    required this.cost,
+    required this.status,
+    required this.statusColor,
+    required this.showRefillWarning,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: '${med.name} ${med.dose} — due at ${med.time}${med.dueSoon ? ", due soon" : ""}',
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.warningBg,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.schedule, color: AppColors.warning, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(med.name, style: AppTextStyles.labelLarge),
-                  Text(med.dose, style: AppTextStyles.bodyMedium),
+                  Text(name, style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text(pharmacy,
+                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted)),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(status,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: statusColor,
+                    fontWeight: FontWeight.w700,
+                  )),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _InfoColumn(label: 'Pickup By', value: pickupDate),
+              _InfoColumn(label: 'Refills', value: refills),
+              _InfoColumn(label: 'Cost', value: cost),
+            ],
+          ),
+          if (showRefillWarning) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.errorBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Refill Required',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.w700,
+                          )),
+                        const SizedBox(height: 2),
+                        Text('No refills remaining. Contact your doctor for a new prescription.',
+                          style: AppTextStyles.caption.copyWith(color: AppColors.error),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(med.time, style: AppTextStyles.titleLarge.copyWith(color: AppColors.warning)),
-                if (med.dueSoon)
-                  Text('Due soon', style: AppTextStyles.caption.copyWith(color: AppColors.warning)),
-              ],
-            ),
           ],
-        ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.call, size: 18),
+                  label: const Text('Contact Doctor'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 44),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 44),
+                  ),
+                  child: const Text('View Details'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _AppointmentCard extends StatelessWidget {
-  final String doctorName, examType, date, time;
-  const _AppointmentCard({required this.doctorName, required this.examType, required this.date, required this.time});
+class _InfoColumn extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoColumn({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Next appointment: $doctorName, $examType on $date at $time',
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppColors.infoBg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.labelSmall),
+        const SizedBox(height: 4),
+        Text(value, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+      ],
+    );
+  }
+}
+
+class _PharmacyCard extends StatelessWidget {
+  final String name;
+  final bool isPrimary;
+  final double rating;
+  final String address;
+  final String distance;
+  final String phone;
+  final String hours;
+
+  const _PharmacyCard({
+    required this.name,
+    this.isPrimary = false,
+    required this.rating,
+    required this.address,
+    required this.distance,
+    required this.phone,
+    required this.hours,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isPrimary ? AppColors.primary : AppColors.border,
+          width: isPrimary ? 2 : 1,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(doctorName, style: AppTextStyles.titleLarge),
-            const SizedBox(height: 4),
-            Text(examType, style: AppTextStyles.bodyMedium),
-            const SizedBox(height: 12),
-            Row(children: [
-              const Icon(Icons.calendar_today, size: 16, color: AppColors.textMuted),
-              const SizedBox(width: 6),
-              Text(date, style: AppTextStyles.bodyMedium),
-            ]),
-            const SizedBox(height: 6),
-            Row(children: [
-              const Icon(Icons.schedule, size: 16, color: AppColors.textMuted),
-              const SizedBox(width: 6),
-              Text(time, style: AppTextStyles.bodyMedium),
-            ]),
-            const SizedBox(height: 14),
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
-              child: const Text('View All Appointments'),
-            ),
-          ],
-        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(name, style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700)),
+              if (isPrimary)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text('Primary',
+                    style: AppTextStyles.caption.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    )),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              ...List.generate(5, (i) => Icon(
+                i < rating.toInt() ? Icons.star : Icons.star_outline,
+                size: 16,
+                color: const Color(0xFFFFA500),
+              )),
+              const SizedBox(width: 8),
+              Text('${rating}', style: AppTextStyles.labelSmall),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _PharmacyInfoRow(icon: Icons.location_on_outlined, text: address),
+          const SizedBox(height: 8),
+          _PharmacyInfoRow(icon: Icons.directions, text: distance),
+          const SizedBox(height: 8),
+          _PharmacyInfoRow(icon: Icons.phone_outlined, text: phone),
+          const SizedBox(height: 8),
+          _PharmacyInfoRow(icon: Icons.schedule, text: hours),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.directions, size: 18),
+                  label: const Text('Directions'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 40),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.call, size: 18),
+                  label: const Text('Call'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 40),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _MiniStatCard extends StatelessWidget {
-  final String value, label;
+class _PharmacyInfoRow extends StatelessWidget {
   final IconData icon;
-  final Color iconColor;
-  final double width;
-  const _MiniStatCard({required this.value, required this.label, required this.icon, required this.iconColor, required this.width});
+  final String text;
+
+  const _PharmacyInfoRow({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: '$label: $value',
-      child: Container(
-        width: width,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(14),
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppColors.textMuted),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(text,
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 30, height: 30,
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), shape: BoxShape.circle),
-              child: Icon(icon, color: Colors.white, size: 16),
-            ),
-            const SizedBox(height: 8),
-            Text(value, style: AppTextStyles.titleLarge.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 2),
-            Text(label, style: AppTextStyles.caption.copyWith(color: Colors.white70), maxLines: 2, overflow: TextOverflow.ellipsis),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

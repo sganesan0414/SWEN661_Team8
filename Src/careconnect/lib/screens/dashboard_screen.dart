@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../components/widgets.dart';
 import 'medications_screen.dart';
+import 'pharmacy.dart';
+import 'reminders.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -25,6 +27,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (index == 1) {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const MedicationsScreen()),
+      );
+    }
+    else if (index == 3) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const RemindersScreen()),
       );
     }
     else if (index == 5) {
@@ -132,13 +139,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         icon: Icons.notifications_outlined,
                         iconColor: const Color(0xFFB85C00),
                         label: 'Reminders',
-                        onTap: () {},
+                        onTap: () => _onNavTap(3),
                       ),
                       QuickActionTile(
                         icon: Icons.favorite_outline,
                         iconColor: const Color(0xFFB0193C),
                         label: 'Health\nMetrics',
                         onTap: () {},
+                      ),
+                      QuickActionTile(
+                        icon: Icons.local_pharmacy_outlined,
+                        iconColor: const Color(0xFF7B3FA0),
+                        label: 'Pharmacy',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const PharmacyScreen()),
+                        ),
                       ),
                       QuickActionTile(
                         icon: Icons.person_outline,
