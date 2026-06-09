@@ -60,12 +60,12 @@ void main() {
 
       // Scroll down to find Change Password button
       await tester.scrollUntilVisible(
-        find.widgetWithText(ElevatedButton.icon, 'Change Password'),
+        find.widgetWithText(ElevatedButton, 'Change Password'),
         500.0,
       );
 
       // Tap Change Password button
-      await tester.tap(find.widgetWithText(ElevatedButton.icon, 'Change Password'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Change Password'));
       await tester.pumpAndSettle();
 
       // Try to confirm with mismatched passwords

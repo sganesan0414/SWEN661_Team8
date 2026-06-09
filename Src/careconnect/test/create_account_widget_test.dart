@@ -27,7 +27,7 @@ void main() {
 
       // Do NOT check the terms checkbox
       // Try to click Continue button
-      final continueButton = find.widgetWithText(ElevatedButton.icon, 'Continue');
+      final continueButton = find.widgetWithText(ElevatedButton, 'Continue');
       await tester.tap(continueButton);
       await tester.pump();
 
@@ -98,7 +98,7 @@ void main() {
       expect(checkbox, findsOneWidget);
 
       // Click Continue button
-      final continueButton = find.widgetWithText(ElevatedButton.icon, 'Continue');
+      final continueButton = find.widgetWithText(ElevatedButton, 'Continue');
       await tester.tap(continueButton);
       await tester.pump();
 
