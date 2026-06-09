@@ -14,8 +14,9 @@ class CareTeamState {
       members.where((m) => m.isEmergencyContact).length;
 }
 
-class CareTeamNotifier extends StateNotifier<CareTeamState> {
-  CareTeamNotifier() : super(CareTeamState(members: _mockMembers));
+class CareTeamNotifier extends Notifier<CareTeamState> {
+  @override
+  CareTeamState build() => CareTeamState(members: _mockMembers);
 
   void addMember(CareTeamMember member) {
     state = state.copyWith(members: [...state.members, member]);
@@ -54,6 +55,4 @@ final _mockMembers = const [
 ];
 
 final careTeamProvider =
-    StateNotifierProvider<CareTeamNotifier, CareTeamState>((ref) {
-  return CareTeamNotifier();
-});
+    NotifierProvider<CareTeamNotifier, CareTeamState>(CareTeamNotifier.new);

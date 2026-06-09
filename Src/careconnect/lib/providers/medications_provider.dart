@@ -32,9 +32,9 @@ class MedicationsState {
   int get upcomingCount => medications.where((m) => !m.taken).length;
 }
 
-class MedicationsNotifier extends StateNotifier<MedicationsState> {
-  MedicationsNotifier()
-      : super(const MedicationsState(medications: _mockMeds));
+class MedicationsNotifier extends Notifier<MedicationsState> {
+  @override
+  MedicationsState build() => const MedicationsState(medications: _mockMeds);
 
   void markTaken(String id) {
     state = state.copyWith(
@@ -67,6 +67,4 @@ const _mockMeds = [
 ];
 
 final medicationsProvider =
-    StateNotifierProvider<MedicationsNotifier, MedicationsState>((ref) {
-  return MedicationsNotifier();
-});
+    NotifierProvider<MedicationsNotifier, MedicationsState>(MedicationsNotifier.new);

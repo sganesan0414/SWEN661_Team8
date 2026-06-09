@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:careconnect/screens/dashboard_screen.dart';
@@ -7,13 +8,15 @@ import 'package:careconnect/theme/app_theme.dart';
 import 'package:careconnect/providers/appointments_provider.dart';
 import '../mocks.dart';
 
+Widget wrap(List<Override> overrides) => ProviderScope(
+  overrides: overrides,
+  child: MaterialApp(theme: AppTheme.theme, home: const DashboardScreen()),
+);
+
 void main() {
   setUpAll(registerFallbacks);
 
-  Widget wrap(List<Override> overrides) => ProviderScope(
-        overrides: overrides,
-        child: MaterialApp(theme: AppTheme.theme, home: const DashboardScreen()),
-      );
+
 
   testWidgets('renders home tab with AppBar title CareConnect', (tester) async {
     final mockNotif = MockNotificationService();

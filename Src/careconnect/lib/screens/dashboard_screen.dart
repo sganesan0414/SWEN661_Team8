@@ -14,6 +14,9 @@ import 'care_team_screen.dart';
 import 'health_metrics_screen.dart';
 import 'health_reports_screen.dart';
 import 'login_screen.dart';
+import 'medications_screen.dart';
+import 'pharmacy.dart';
+import 'reminders.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -91,138 +94,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         children: [
           ContextBar(screenLabel: _contextLabels[_navIndex]),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Good Morning, $_userName',
-                          style: AppTextStyles.displayLarge.copyWith(color: Colors.white),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _todayLabel,
-                          style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
-                        ),
-                        const SizedBox(height: 20),
-                        // ── Stat cards ──────────────────────────────────────
-                        LayoutBuilder(builder: (context, constraints) {
-                          final w = (constraints.maxWidth - 16) / 3;
-                          return Row(
-                            children: [
-                              _MiniStatCard(value: '5/6', label: 'Medications\nToday', icon: Icons.medication, iconColor: AppColors.accent, width: w),
-                              const SizedBox(width: 8),
-                              _MiniStatCard(value: '94%', label: 'Adherence\nRate', icon: Icons.trending_up, iconColor: const Color(0xFF1A7A4A), width: w),
-                              const SizedBox(width: 8),
-                              _MiniStatCard(value: 'Jun 15', label: 'Next\nAppointment', icon: Icons.calendar_today, iconColor: AppColors.accent, width: w),
-                            ],
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  Text('Quick Actions', style: AppTextStyles.headlineMedium),
-                  const SizedBox(height: 14),
-                  GridView.count(
-                    crossAxisCount: 4,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.9,
-                    children: [
-                      QuickActionTile(
-                        icon: Icons.medication_outlined,
-                        iconColor: AppColors.primary,
-                        label: 'My\nMedications',
-                        onTap: () => _onNavTap(1),
-                      ),
-                      QuickActionTile(
-                        icon: Icons.calendar_today_outlined,
-                        iconColor: const Color(0xFF7B3FA0),
-                        label: 'Appointments',
-                        onTap: () {},
-                      ),
-                      QuickActionTile(
-                        icon: Icons.notifications_outlined,
-                        iconColor: const Color(0xFFB85C00),
-                        label: 'Reminders',
-                        onTap: () {},
-                      ),
-                      QuickActionTile(
-                        icon: Icons.favorite_outline,
-                        iconColor: const Color(0xFFB0193C),
-                        label: 'Health\nMetrics',
-                        onTap: () {},
-                      ),
-                      QuickActionTile(
-                        icon: Icons.person_outline,
-                        iconColor: const Color(0xFFB0193C),
-                        label: 'Profile',
-                        onTap: () => _onNavTap(5),
-                      ),
-                      QuickActionTile(
-                        icon: Icons.settings_outlined,
-                        iconColor: AppColors.textMuted,
-                        label: 'Settings',
-                        onTap: () => _onNavTap(6),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  AlertBanner(
-                    icon: Icons.warning_amber_rounded,
-                    title: 'Refill Reminder',
-                    body: 'Atorvastatin has only 2 refills remaining. Request a refill soon.',
-                    actionLabel: 'Request Refill',
-                    onAction: () {},
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Upcoming Medications ──────────────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Upcoming Medications', style: AppTextStyles.headlineMedium),
-                      TextButton(
-                        onPressed: () => _onNavTap(1),
-                        child: const Text('View All'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ..._upcomingMeds.map((med) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _UpcomingMedRow(med: med),
-                  )),
-                  const SizedBox(height: 24),
-
-                  // ── Next appointment card ─────────────────────────────────
-                  Text('Next Appointment', style: AppTextStyles.headlineMedium),
-                  const SizedBox(height: 12),
-                  _AppointmentCard(
-                    doctorName: 'Dr. Sarah Johnson',
-                    examType: 'Annual Physical Exam',
-                    date: 'June 15, 2026',
-                    time: '10:00 AM',
-                  ),
-                  const SizedBox(height: 32),
-                ],
-              ),
             child: IndexedStack(
               index: _navIndex,
               children: const [
@@ -375,7 +246,9 @@ class _HomeTab extends ConsumerWidget {
             title: 'Refill Reminder',
             body: 'Atorvastatin has only 2 refills remaining. Request a refill soon.',
             actionLabel: 'Request Refill',
-            onAction: () {},
+            onAction: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PharmacyScreen()),
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -638,23 +511,7 @@ class _RemindersTab extends StatelessWidget {
   const _RemindersTab();
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.notifications_outlined, size: 64, color: AppColors.textMuted),
-            const SizedBox(height: 16),
-            Text('Reminders', style: AppTextStyles.headlineMedium),
-            const SizedBox(height: 8),
-            Text('Coming Soon', style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const RemindersScreen();
 }
 
 // ── Tab 4: Care Team ─────────────────────────────────────────────────────────

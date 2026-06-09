@@ -6,7 +6,7 @@ class MockNotificationService extends Mock implements NotificationService {}
 
 void registerFallbacks() {
   registerFallbackValue(
-    const Appointment(
+    Appointment(
       id: 'fallback',
       doctorName: 'Fake Doctor',
       specialty: 'General',
@@ -16,4 +16,4 @@ void registerFallbacks() {
   );
 }
 
-const _time = DateTime.utc(2000);
+final _time = DateTime.utc(2000);

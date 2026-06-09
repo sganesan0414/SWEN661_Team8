@@ -21,9 +21,9 @@ class HealthReportsState {
   }
 }
 
-class HealthReportsNotifier extends StateNotifier<HealthReportsState> {
-  HealthReportsNotifier()
-      : super(HealthReportsState(reports: _mockReports));
+class HealthReportsNotifier extends Notifier<HealthReportsState> {
+  @override
+  HealthReportsState build() => HealthReportsState(reports: _mockReports);
 
   Future<void> generateReport(ReportType type) async {
     state = state.copyWith(isGenerating: true);
@@ -75,6 +75,5 @@ final _mockReports = [
 ];
 
 final healthReportsProvider =
-    StateNotifierProvider<HealthReportsNotifier, HealthReportsState>((ref) {
-  return HealthReportsNotifier();
-});
+    NotifierProvider<HealthReportsNotifier, HealthReportsState>(
+        HealthReportsNotifier.new);

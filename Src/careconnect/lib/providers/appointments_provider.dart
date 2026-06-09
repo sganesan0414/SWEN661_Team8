@@ -30,17 +30,18 @@ class AppointmentsState {
       .toList();
 }
 
-class AppointmentsNotifier extends StateNotifier<AppointmentsState> {
-  final NotificationService _notificationService;
-
-  AppointmentsNotifier(this._notificationService)
-      : super(AppointmentsState(appointments: _mockAppointments));
+class AppointmentsNotifier extends Notifier<AppointmentsState> {
+  @override
+  AppointmentsState build() =>
+      AppointmentsState(appointments: _mockAppointments);
 
   Future<void> scheduleAppointment(Appointment appointment) async {
     state = state.copyWith(
       appointments: [...state.appointments, appointment],
     );
-    await _notificationService.scheduleAppointmentReminder(appointment);
+    await ref
+        .read(notificationServiceProvider)
+        .scheduleAppointmentReminder(appointment);
   }
 
   Future<void> cancelAppointment(String id) async {
@@ -50,19 +51,21 @@ class AppointmentsNotifier extends StateNotifier<AppointmentsState> {
               a.id == id ? a.copyWith(status: AppointmentStatus.cancelled) : a)
           .toList(),
     );
-    await _notificationService.cancelAppointmentReminders(id);
+    await ref.read(notificationServiceProvider).cancelAppointmentReminders(id);
   }
 
   Future<void> rescheduleAppointment(String id, DateTime newDateTime) async {
     final old = state.appointments.firstWhere((a) => a.id == id);
-    await _notificationService.cancelAppointmentReminders(id);
+    await ref.read(notificationServiceProvider).cancelAppointmentReminders(id);
     final updated = old.copyWith(dateTime: newDateTime);
     state = state.copyWith(
       appointments: state.appointments
           .map((a) => a.id == id ? updated : a)
           .toList(),
     );
-    await _notificationService.scheduleAppointmentReminder(updated);
+    await ref
+        .read(notificationServiceProvider)
+        .scheduleAppointmentReminder(updated);
   }
 }
 
@@ -99,6 +102,5 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 });
 
 final appointmentsProvider =
-    StateNotifierProvider<AppointmentsNotifier, AppointmentsState>((ref) {
-  return AppointmentsNotifier(ref.read(notificationServiceProvider));
-});
+    NotifierProvider<AppointmentsNotifier, AppointmentsState>(
+        AppointmentsNotifier.new);

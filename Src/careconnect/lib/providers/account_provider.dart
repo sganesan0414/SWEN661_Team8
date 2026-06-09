@@ -32,8 +32,9 @@ class AccountState {
   }
 }
 
-class AccountNotifier extends StateNotifier<AccountState> {
-  AccountNotifier() : super(const AccountState());
+class AccountNotifier extends Notifier<AccountState> {
+  @override
+  AccountState build() => const AccountState();
 
   Future<void> signIn(String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
@@ -52,6 +53,4 @@ class AccountNotifier extends StateNotifier<AccountState> {
 }
 
 final accountProvider =
-    StateNotifierProvider<AccountNotifier, AccountState>((ref) {
-  return AccountNotifier();
-});
+    NotifierProvider<AccountNotifier, AccountState>(AccountNotifier.new);

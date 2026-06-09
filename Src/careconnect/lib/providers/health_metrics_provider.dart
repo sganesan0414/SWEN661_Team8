@@ -21,9 +21,9 @@ class HealthMetricsState {
   }
 }
 
-class HealthMetricsNotifier extends StateNotifier<HealthMetricsState> {
-  HealthMetricsNotifier()
-      : super(HealthMetricsState(metrics: _mockMetrics));
+class HealthMetricsNotifier extends Notifier<HealthMetricsState> {
+  @override
+  HealthMetricsState build() => HealthMetricsState(metrics: _mockMetrics);
 
   Future<void> addReading(String metricId, double value, {String? secondaryValue}) async {
     state = state.copyWith(isAddingReading: true);
@@ -113,6 +113,5 @@ final _mockMetrics = [
 ];
 
 final healthMetricsProvider =
-    StateNotifierProvider<HealthMetricsNotifier, HealthMetricsState>((ref) {
-  return HealthMetricsNotifier();
-});
+    NotifierProvider<HealthMetricsNotifier, HealthMetricsState>(
+        HealthMetricsNotifier.new);

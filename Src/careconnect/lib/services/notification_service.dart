@@ -13,7 +13,7 @@ class NotificationService {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
     const settings = InitializationSettings(android: android, iOS: ios);
-    await _plugin.initialize(settings);
+    await _plugin.initialize(settings: settings);
   }
 
   Future<void> scheduleAppointmentReminder(Appointment appointment) async {
@@ -29,7 +29,6 @@ class NotificationService {
       iOS: DarwinNotificationDetails(),
     );
 
-    final title = 'Appointment Tomorrow';
     final body =
         '${appointment.doctorName} - ${appointment.specialty} at ${appointment.location}';
 
@@ -39,29 +38,29 @@ class NotificationService {
 
     if (minus24h.isAfter(now)) {
       await _plugin.zonedSchedule(
-        appointment.id.hashCode,
-        title,
-        body,
-        tz.TZDateTime.from(minus24h, tz.local),
-        notifDetails,
+        id: appointment.id.hashCode,
+        title: 'Appointment Tomorrow',
+        body: body,
+        scheduledDate: tz.TZDateTime.from(minus24h, tz.local),
+        notificationDetails: notifDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     }
 
     if (minus1h.isAfter(now)) {
       await _plugin.zonedSchedule(
-        appointment.id.hashCode + 1,
-        'Appointment in 1 Hour',
-        body,
-        tz.TZDateTime.from(minus1h, tz.local),
-        notifDetails,
+        id: appointment.id.hashCode + 1,
+        title: 'Appointment in 1 Hour',
+        body: body,
+        scheduledDate: tz.TZDateTime.from(minus1h, tz.local),
+        notificationDetails: notifDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     }
   }
 
   Future<void> cancelAppointmentReminders(String id) async {
-    await _plugin.cancel(id.hashCode);
-    await _plugin.cancel(id.hashCode + 1);
+    await _plugin.cancel(id: id.hashCode);
+    await _plugin.cancel(id: id.hashCode + 1);
   }
 }
