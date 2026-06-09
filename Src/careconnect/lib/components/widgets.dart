@@ -215,7 +215,7 @@ class AlertBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      liveRegion: true, // WCAG 4.1.3: status messages
+      liveRegion: true,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.alertBg,

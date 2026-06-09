@@ -1,21 +1,22 @@
 import 'package:careconnect/screens/create_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
+import '../providers/account_provider.dart';
 import 'dashboard_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
   bool _buttonCooling = false;
 
   void _goToDashboard() {
@@ -35,7 +36,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleBiometric(String method) async {
     HapticFeedback.mediumImpact();
-    // TODO: Authentiation
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$method authentication requested'),
@@ -46,17 +46,21 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleSignIn() async {
-    if (_buttonCooling) return;            
-    setState(() { _buttonCooling = true; _isLoading = true; });
-    HapticFeedback.lightImpact();          
+    if (_buttonCooling) return;
+    setState(() => _buttonCooling = true);
+    HapticFeedback.lightImpact();
 
-    // TODO: Real auth delay. We can remove this
-    await Future.delayed(const Duration(milliseconds: 1500)); 
+    await ref
+        .read(accountProvider.notifier)
+        .signIn(_emailController.text, _passwordController.text);
 
-    if (mounted) setState(() { _isLoading = false; });
     await Future.delayed(const Duration(milliseconds: 1500));
-    if (mounted) setState(() { _buttonCooling = false; });
-    _goToDashboard();
+    if (mounted) setState(() => _buttonCooling = false);
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -68,8 +72,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AccountState>(accountProvider, (previous, next) {
+      if (!previous!.isLoggedIn && next.isLoggedIn) {
+        _goToDashboard();
+      }
+    });
+
+    final account = ref.watch(accountProvider);
+    final isLoading = account.isLoading;
+
     return Scaffold(
-      backgroundColor: AppColors.surface, 
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
@@ -193,13 +206,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 label: 'Sign in to your account',
                 child: ElevatedButton.icon(
                   onPressed: _buttonCooling ? null : _handleSignIn,
-                  icon: _isLoading
+                  icon: isLoading
                       ? const SizedBox(
                           width: 20, height: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
                       : const Icon(Icons.login_outlined),
-                  label: Text(_isLoading ? 'Signing in…' : 'Sign In'),
+                  label: Text(isLoading ? 'Signing in…' : 'Sign In'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 58),
                     textStyle: AppTextStyles.titleLarge,
