@@ -1,3 +1,4 @@
+import 'package:careconnect/screens/create_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
@@ -23,6 +24,14 @@ class _LoginScreenState extends State<LoginScreen> {
       MaterialPageRoute(builder: (_) => const DashboardScreen()),
     );
   }
+
+  void _goToCreateAccount() {
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const CreateAccountScreen()),
+    );
+  }
+
 
   Future<void> _handleBiometric(String method) async {
     HapticFeedback.mediumImpact();
@@ -208,6 +217,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   foregroundColor: AppColors.textSecondary,
                   minimumSize: const Size(double.infinity, 52),
                   textStyle: AppTextStyles.bodyMedium,
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Dont have an account? '),
+                    TextButton(
+                      onPressed: () => _goToCreateAccount(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        minimumSize: const Size(48, 48),
+                    ),
+                    child: Text('Create Account', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary)),
+                    ),
+                  ],
                 ),
               ),
 

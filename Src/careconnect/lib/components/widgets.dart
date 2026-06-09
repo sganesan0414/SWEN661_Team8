@@ -119,6 +119,8 @@ class CareConnectBottomNav extends StatelessWidget {
     BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), activeIcon: Icon(Icons.calendar_today), label: 'Appointments'),
     BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.notifications), label: 'Reminders'),
     BottomNavigationBarItem(icon: Icon(Icons.people_outline),    activeIcon: Icon(Icons.people),      label: 'Care Team'),
+    BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.people), label: 'Profile'),
+    BottomNavigationBarItem(icon: Icon(Icons.people_outline),    activeIcon: Icon(Icons.people),      label: 'Settings'),
   ];
 
   @override

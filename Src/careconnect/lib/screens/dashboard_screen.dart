@@ -1,3 +1,5 @@
+import 'package:careconnect/screens/user_profile.dart';
+import 'package:careconnect/screens/user_settings.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../components/widgets.dart';
@@ -23,6 +25,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (index == 1) {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const MedicationsScreen()),
+      );
+    }
+    else if (index == 5) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const UserProfileScreen()),
+      );
+    }
+    else if (index == 6) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const SettingsScreen()),
       );
     }
   }
@@ -127,6 +139,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         iconColor: const Color(0xFFB0193C),
                         label: 'Health\nMetrics',
                         onTap: () {},
+                      ),
+                      QuickActionTile(
+                        icon: Icons.person_outline,
+                        iconColor: const Color(0xFFB0193C),
+                        label: 'Profile',
+                        onTap: () => _onNavTap(5),
+                      ),
+                      QuickActionTile(
+                        icon: Icons.settings_outlined,
+                        iconColor: AppColors.textMuted,
+                        label: 'Settings',
+                        onTap: () => _onNavTap(6),
                       ),
                     ],
                   ),
