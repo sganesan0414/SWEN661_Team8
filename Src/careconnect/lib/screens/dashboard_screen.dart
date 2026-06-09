@@ -46,22 +46,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   void _onNavTap(int index) {
     HapticFeedback.selectionClick();
-    setState(() => _navIndex = index);
-    // TODO: we need to  use go_router / Navigator to push named routes
-    if (index == 1) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const MedicationsScreen()),
-      );
-    }
-    else if (index == 5) {
+    if (index == 5) {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const UserProfileScreen()),
       );
-    }
-    else if (index == 6) {
+    } else if (index == 6) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const SettingsScreen()),
       );
+    } else {
+      setState(() => _navIndex = index);
     }
   }
 
