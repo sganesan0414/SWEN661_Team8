@@ -100,15 +100,81 @@ flutter test test/screens/
 
 # 5. Link to test coverage report
 
-To generate and view the HTML coverage report locally:
-```
-flutter test --coverage
-genhtml coverage/lcov.info -o coverage/html
-open coverage/html/index.html
-```
-> Note: `genhtml` requires the `lcov` package. Install it with `brew install lcov` (macOS) or `sudo apt install lcov` (Linux).
+The HTML coverage report is generated locally from the `lcov.info` file produced by `flutter test --coverage`.
+Current overall line coverage: **75.0%** (1895 of 2525 lines).
 
-A hosted coverage report has not yet been published. Run the commands above to generate the report locally.
+---
+
+### Windows — Step-by-step instructions
+
+**Prerequisites:**
+- Flutter SDK installed and on PATH
+- Git for Windows installed (provides the Perl runtime used by `genhtml`)
+- All project dependencies installed (`flutter pub get`)
+
+**Step 1 — Navigate to the project folder**
+
+Open **PowerShell** and navigate to wherever you cloned the repository:
+```powershell
+cd "path\to\SWEN661_Team8\Src\careconnect"
+```
+> Replace `path\to\` with the actual path on your machine where you cloned the repo.
+
+**Step 2 — Run tests and generate the coverage data file**
+```powershell
+flutter test --coverage
+```
+This runs the full test suite and outputs `coverage/lcov.info`.
+
+**Step 3 — Download the `genhtml` script (one-time setup)**
+
+Open **Git Bash** (right-click in the project folder → "Open Git Bash here") and run:
+```bash
+curl -o genhtml https://raw.githubusercontent.com/linux-test-project/lcov/v1.16/bin/genhtml
+```
+> Only needs to be done once. The `genhtml` file will be saved in the project root.
+
+**Step 4 — Create the output directory and generate the HTML report**
+
+Still in **Git Bash**, run:
+```bash
+mkdir -p coverage/html
+perl genhtml coverage/lcov.info -o coverage/html
+```
+> Git Bash must be used here (not PowerShell) because `genhtml` relies on Unix tools that come bundled with Git for Windows.
+
+**Step 5 — Open the report in your browser**
+
+In **PowerShell**:
+```powershell
+start coverage\html\index.html
+```
+Or simply navigate to `coverage\html\index.html` in File Explorer and double-click it.
+
+---
+
+### macOS / Linux
+```bash
+# Step 1 — Run tests
+flutter test --coverage
+
+# Step 2 — Install lcov
+brew install lcov        # macOS
+sudo apt install lcov    # Ubuntu/Debian
+
+# Step 3 — Generate the HTML report
+genhtml coverage/lcov.info -o coverage/html
+
+# Step 4 — Open the report
+open coverage/html/index.html   # macOS
+xdg-open coverage/html/index.html  # Linux
+```
+
+---
+
+The full report will be available at `coverage/html/index.html` after running the steps above.
+
+A hosted coverage report has not yet been published.
 
 # 6. Known issues or limitations
   1. Lack of AI LLM Credits — Limited access to AI/LLM API credits restricts the ability to generate dynamic prompts and AI-assisted features within the app.
