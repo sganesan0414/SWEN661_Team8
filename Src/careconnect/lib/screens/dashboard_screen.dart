@@ -505,7 +505,10 @@ class _RemindersTab extends StatelessWidget {
   const _RemindersTab();
 
   @override
-  Widget build(BuildContext context) => const RemindersScreen();
+  Widget build(BuildContext context) {
+    final dashState = context.findAncestorStateOfType<_DashboardScreenState>();
+    return RemindersScreen(onBack: () => dashState?._onNavTap(0));
+  }
 }
 
 // ── Tab 4: Care Team ─────────────────────────────────────────────────────────
