@@ -14,7 +14,7 @@ import 'care_team_screen.dart';
 import 'health_metrics_screen.dart';
 import 'health_reports_screen.dart';
 import 'login_screen.dart';
-import 'medications_screen.dart';
+
 import 'pharmacy.dart';
 import 'reminders.dart';
 
