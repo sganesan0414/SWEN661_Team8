@@ -62,12 +62,60 @@ Go to the project folder by cd  your_project_folder
 
 # 4. How to run the tests
 
+The project uses Flutter's built-in test framework (`flutter_test`) along with `mocktail` for mocking.
+
+**Prerequisites:** Ensure you have run `flutter pub get` to install all dependencies before running tests.
+
+### Run all tests
+```
+flutter test
+```
+
+### Run a specific test file
+```
+flutter test test/screens/login_screen_test.dart
+```
+
+### Run tests with coverage
+```
+flutter test --coverage
+```
+This generates a coverage report at `coverage/lcov.info`.
+
+### Test structure
+The test suite is organized as follows:
+- `test/` — Unit and widget tests for screens (create account, user profile, user settings)
+- `test/screens/` — Widget tests for all screens (dashboard, login, appointments, reminders, medications, health metrics, health reports, pharmacy, care team)
+- `test/providers/` — Unit tests for all Riverpod providers (account, appointments, care team, health metrics, health reports, medications)
+
+### Run only provider tests
+```
+flutter test test/providers/
+```
+
+### Run only screen tests
+```
+flutter test test/screens/
+```
+
 # 5. Link to test coverage report
 
+To generate and view the HTML coverage report locally:
+```
+flutter test --coverage
+genhtml coverage/lcov.info -o coverage/html
+open coverage/html/index.html
+```
+> Note: `genhtml` requires the `lcov` package. Install it with `brew install lcov` (macOS) or `sudo apt install lcov` (Linux).
+
+A hosted coverage report has not yet been published. Run the commands above to generate the report locally.
 
 # 6. Known issues or limitations
-  1. Lack of AI LLM Credits (Used to create prompts)
-  2. 
+  1. Lack of AI LLM Credits — Limited access to AI/LLM API credits restricts the ability to generate dynamic prompts and AI-assisted features within the app.
+  2. No backend persistence — App data (reminders, medications, appointments) is stored in-memory via Riverpod providers and is lost when the app is closed. Integration with a persistent backend (e.g., Firebase) is not yet implemented.
+  3. SOS alert feature is not fully implemented — The SOS alert/emergency contact notification flow is a placeholder and does not send real notifications or messages to caregivers.
+  4. iOS simulator required for iOS testing — Testing on iOS requires Xcode and a macOS machine; the app cannot be built or tested on Windows/Linux for the iOS target.
+  5. Push notifications limited to device — `flutter_local_notifications` only supports local on-device notifications; real-time caregiver push notifications across devices are not yet supported.
 
 # 7. Team member contributions this week
      Brice Tikum
@@ -79,7 +127,7 @@ Go to the project folder by cd  your_project_folder
 
     As a team, we have used GitHub CoPilot and Claude for VS code AI to develop the screens and unit test .dart files. Also, we asked AI to fix the compilation and run time errors by providing a correct prompt.
 
-    We input the AI with the screen dart file to generate testase and the AI created the valid unit testcases and ran thos to make sure the screen functionality is not broken.
+    We input the AI with the screen dart file to generate testase and the AI created the valid Junit and widget testcases. Those were ran  to make sure the screens were fully functional.
 
 
   

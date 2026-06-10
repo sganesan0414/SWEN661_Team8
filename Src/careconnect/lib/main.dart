@@ -6,7 +6,11 @@ import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService().initialize();
+  try {
+    await NotificationService().initialize();
+  } catch (_) {
+    // Notifications unavailable (e.g. emulator / missing permission) — continue anyway.
+  }
   runApp(const ProviderScope(child: MyApp()));
 }
 
