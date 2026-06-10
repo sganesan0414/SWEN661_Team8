@@ -14,8 +14,9 @@ void main() {
       await tester.pumpWidget(_wrap(const PharmacyScreen()));
       expect(find.text('My Pharmacies'), findsWidgets);
       expect(find.text('6 active prescriptions'), findsOneWidget);
-      expect(find.text('Lisinopril'), findsOneWidget);
-      expect(find.text('Metformin'), findsOneWidget);
+      // Prescription cards render name and dose together, e.g. "Lisinopril 10 mg".
+      expect(find.textContaining('Lisinopril'), findsWidgets);
+      expect(find.textContaining('Metformin'), findsWidgets);
       expect(find.text('CVS Pharmacy'), findsWidgets);
       expect(find.text('Walgreens'), findsOneWidget);
       expect(find.text('Rite Aid'), findsOneWidget);
@@ -25,7 +26,7 @@ void main() {
       await tester.pumpWidget(_wrap(const PharmacyScreen()));
       // LabeledBackButton renders the destination as "Return to Dashboard".
       expect(find.textContaining('Dashboard'), findsWidgets);
-      expect(find.byType(IconButton), findsWidgets);
+      expect(find.byIcon(Icons.arrow_back), findsWidgets);
     });
   });
 }
