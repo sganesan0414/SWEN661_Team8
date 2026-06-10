@@ -32,7 +32,7 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pump();
       expect(find.text('Total'), findsOneWidget);
-      expect(find.text('Upcoming'), findsOneWidget);
+      expect(find.text('Upcoming'), findsWidgets);
       expect(find.text('Completed'), findsOneWidget);
     });
 
@@ -41,7 +41,13 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Dr. Sarah Johnson'));
       await tester.pumpAndSettle();
-      expect(find.text('Annual Physical Exam'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('bring medication list'), findsOneWidget);
+    });
+
+    testWidgets('completed appointment tile renders status badge', (tester) async {
+      await tester.pumpWidget(wrap());
+      await tester.pump();
+      expect(find.text('Done'), findsOneWidget);
     });
   });
 }

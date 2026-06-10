@@ -27,194 +27,177 @@ class RemindersScreen extends ConsumerWidget {
             child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          LabeledBackButton(
-                            label: 'Dashboard',
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isNarrow = constraints.maxWidth < 720;
+                    return isNarrow
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Reminders', style: AppTextStyles.displayLarge),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '$activeCount active reminders',
-                                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
-                                  ),
-                                ],
+                              _buildMainColumn(context, upcoming, upcomingAppts, activeCount),
+                              const SizedBox(height: 24),
+                              _buildSideColumn(activeCount, upcoming.length, upcomingAppts.length),
+                            ],
+                          )
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: _buildMainColumn(context, upcoming, upcomingAppts, activeCount),
                               ),
-                              ElevatedButton.icon(
-                                onPressed: () {},
-                                icon: const Icon(Icons.add, size: 20),
-                                label: const Text('Add Reminder'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(120, 44),
-                                ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                flex: 1,
+                                child: _buildSideColumn(activeCount, upcoming.length, upcomingAppts.length),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          Text('Medications Due', style: AppTextStyles.headlineMedium),
-                          const SizedBox(height: 12),
-                          if (upcoming.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: Text('All medications taken for today.', style: AppTextStyles.bodyMedium),
-                            )
-                          else
-                            ...upcoming.map((med) => Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: _ReminderCard(
-                                icon: Icons.medication_outlined,
-                                title: med.name,
-                                subtitle: med.dose,
-                                time: med.times.isNotEmpty ? med.times.first : '',
-                                days: med.schedule,
-                                isEnabled: true,
-                              ),
-                            )),
-
-                          if (upcomingAppts.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text('Upcoming Appointments', style: AppTextStyles.headlineMedium),
-                            const SizedBox(height: 12),
-                            ...upcomingAppts.map((appt) => Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: _ReminderCard(
-                                icon: Icons.event_outlined,
-                                title: appt.doctorName,
-                                subtitle: appt.specialty,
-                                time: '${appt.dateTime.hour}:${appt.dateTime.minute.toString().padLeft(2, '0')}',
-                                days: 'Jun ${appt.dateTime.day}',
-                                isEnabled: true,
-                              ),
-                            )),
-                          ],
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Global Settings',
-                                  style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 16),
-                                _SettingRow(label: 'Sound', value: true),
-                                const SizedBox(height: 12),
-                                _SettingRow(label: 'Vibration', value: true),
-                                const SizedBox(height: 12),
-                                _SettingRow(label: 'Do Not Disturb', value: false),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Statistics',
-                                  style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 16),
-                                _StatRow(label: 'Active Reminders', value: '$activeCount'),
-                                const SizedBox(height: 12),
-                                _StatRow(label: 'Medications Due', value: '${upcoming.length}'),
-                                const SizedBox(height: 12),
-                                _StatRow(label: 'Appointments', value: '${upcomingAppts.length}'),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Quick Actions',
-                                  style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 16),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton.icon(
-                                    onPressed: () {},
-                                    icon: const Icon(Icons.notifications_active_outlined),
-                                    label: const Text('Test All Reminders'),
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size(double.infinity, 44),
-                                      side: const BorderSide(color: AppColors.primary),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton.icon(
-                                    onPressed: () {},
-                                    icon: const Icon(Icons.snooze_outlined),
-                                    label: const Text('Snooze All (1 hour)'),
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size(double.infinity, 44),
-                                      side: const BorderSide(color: AppColors.primary),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                          );
+                  },
                 ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMainColumn(BuildContext context, List upcoming, List upcomingAppts, int activeCount) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        LabeledBackButton(label: 'Dashboard', onPressed: () => Navigator.of(context).pop()),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Reminders', style: AppTextStyles.displayLarge),
+                const SizedBox(height: 4),
+                Text('$activeCount active reminders', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted)),
+              ],
+            ),
+            ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.add, size: 20),
+              label: const Text('Add Reminder'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, minimumSize: const Size(120, 44)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text('Medications Due', style: AppTextStyles.headlineMedium),
+        const SizedBox(height: 12),
+        if (upcoming.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text('All medications taken for today.', style: AppTextStyles.bodyMedium),
+          )
+        else
+          ...upcoming.map((med) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _ReminderCard(
+                  icon: Icons.medication_outlined,
+                  title: med.name,
+                  subtitle: med.dose,
+                  time: med.times.isNotEmpty ? med.times.first : '',
+                  days: med.schedule,
+                  isEnabled: true,
+                ),
+              )),
+        if (upcomingAppts.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text('Upcoming Appointments', style: AppTextStyles.headlineMedium),
+          const SizedBox(height: 12),
+          ...upcomingAppts.map((appt) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _ReminderCard(
+                  icon: Icons.event_outlined,
+                  title: appt.doctorName,
+                  subtitle: appt.specialty,
+                  time: '${appt.dateTime.hour}:${appt.dateTime.minute.toString().padLeft(2, '0')}',
+                  days: 'Jun ${appt.dateTime.day}',
+                  isEnabled: true,
+                ),
+              )),
+        ],
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildSideColumn(int activeCount, int medicationsDue, int appointments) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Global Settings', style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 16),
+              _SettingRow(label: 'Sound', value: true),
+              const SizedBox(height: 12),
+              _SettingRow(label: 'Vibration', value: true),
+              const SizedBox(height: 12),
+              _SettingRow(label: 'Do Not Disturb', value: false),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Statistics', style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 16),
+              _StatRow(label: 'Active Reminders', value: '$activeCount'),
+              const SizedBox(height: 12),
+              _StatRow(label: 'Medications Due', value: '$medicationsDue'),
+              const SizedBox(height: 12),
+              _StatRow(label: 'Appointments', value: '$appointments'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Quick Actions', style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.notifications_active_outlined),
+                  label: const Text('Test All Reminders'),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 44), side: const BorderSide(color: AppColors.primary)),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.snooze_outlined),
+                  label: const Text('Snooze All (1 hour)'),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 44), side: const BorderSide(color: AppColors.primary)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

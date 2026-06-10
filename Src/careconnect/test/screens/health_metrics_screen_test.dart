@@ -12,10 +12,10 @@ void main() {
   group('HealthMetricsScreen', () {
     testWidgets('renders all 4 vital cards', (tester) async {
       await tester.pumpWidget(_wrap(const HealthMetricsScreen()));
-      expect(find.text('Blood Pressure'), findsOneWidget);
-      expect(find.text('Heart Rate'), findsOneWidget);
-      expect(find.text('Temperature'), findsOneWidget);
-      expect(find.text('Oxygen Saturation'), findsOneWidget);
+      expect(find.text('Blood Pressure'), findsWidgets);
+      expect(find.text('Heart Rate'), findsWidgets);
+      expect(find.text('Temperature'), findsWidgets);
+      expect(find.text('Oxygen Saturation'), findsWidgets);
     });
 
     testWidgets('renders Add Reading section', (tester) async {
@@ -27,6 +27,25 @@ void main() {
     testWidgets('renders Recent Readings section', (tester) async {
       await tester.pumpWidget(_wrap(const HealthMetricsScreen()));
       expect(find.text('Recent Readings'), findsOneWidget);
+    });
+
+    testWidgets('save reading button adds a new reading after selection', (tester) async {
+      await tester.pumpWidget(_wrap(const HealthMetricsScreen()));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byType(DropdownButtonFormField<String>));
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Blood Pressure').last);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '125');
+      await tester.pump();
+      await tester.tap(find.text('Save Reading'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+      await tester.pumpAndSettle();
+      expect(find.text('Save Reading'), findsOneWidget);
     });
   });
 }

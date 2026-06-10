@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:careconnect/components/widgets.dart';
 import 'package:careconnect/screens/health_reports_screen.dart';
 import 'package:careconnect/theme/app_theme.dart';
 
@@ -19,9 +20,9 @@ void main() {
     testWidgets('renders generate section', (tester) async {
       await tester.pumpWidget(_wrap(const HealthReportsScreen()));
       expect(find.text('Generate New Report'), findsOneWidget);
-      expect(find.text('Monthly'), findsOneWidget);
-      expect(find.text('Quarterly'), findsOneWidget);
-      expect(find.text('Custom'), findsOneWidget);
+      expect(find.widgetWithText(QuickActionTile, 'Monthly'), findsOneWidget);
+      expect(find.widgetWithText(QuickActionTile, 'Quarterly'), findsOneWidget);
+      expect(find.widgetWithText(QuickActionTile, 'Custom'), findsOneWidget);
     });
 
     testWidgets('renders stat cards', (tester) async {
@@ -29,6 +30,16 @@ void main() {
       expect(find.text('Total Reports'), findsOneWidget);
       expect(find.text('This Month'), findsOneWidget);
       expect(find.text('Last Generated'), findsOneWidget);
+    });
+
+    testWidgets('generate buttons start report generation flow', (tester) async {
+      await tester.pumpWidget(_wrap(const HealthReportsScreen()));
+      await tester.tap(find.widgetWithText(QuickActionTile, 'Monthly'));
+      await tester.pump();
+      expect(find.text('Generating report…'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Monthly Summary'), findsWidgets);
     });
   });
 }

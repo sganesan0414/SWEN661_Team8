@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:careconnect/screens/login_screen.dart';
+import 'package:careconnect/screens/create_account.dart';
 import 'package:careconnect/theme/app_theme.dart';
 
 Widget _wrap(Widget child) => ProviderScope(
@@ -31,6 +32,20 @@ void main() {
       await tester.tap(find.text('Sign In'));
       await tester.pump();
       expect(find.text('Signing in…'), findsOneWidget);
+    });
+
+    testWidgets('tapping create account navigates to create account screen', (tester) async {
+      await tester.pumpWidget(_wrap(const LoginScreen()));
+      await tester.tap(find.text('Create Account'));
+      await tester.pumpAndSettle();
+      expect(find.text('Create Your Account'), findsOneWidget);
+    });
+
+    testWidgets('biometric authentication buttons show feedback', (tester) async {
+      await tester.pumpWidget(_wrap(const LoginScreen()));
+      await tester.tap(find.text('Fingerprint'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('authentication requested'), findsWidgets);
     });
   });
 }

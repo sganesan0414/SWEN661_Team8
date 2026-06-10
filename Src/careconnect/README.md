@@ -66,7 +66,8 @@ Go to the project folder by cd  your_project_folder
 
 
 # 6. Known issues or limitations
-
+  1. Lack of AI LLM Credits (Used to create prompts)
+  2. 
 
 # 7. Team member contributions this week
      Brice Tikum
