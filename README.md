@@ -8,6 +8,8 @@ Team Members : Brice Tikum, David Oguh, Sivakumar Ganesan
 
 [Team Charter / Project Plan](https://github.com/sganesan0414/SWEN661_Team8/blob/main/Team8_WK01_Charter_Proposal.docx)
 
+[STML & WCAG Accessibility Guidelines](docs/STML_WCAG_GUIDELINES.md)
+
 ## Architecture Overview
 
 ```

@@ -43,7 +43,9 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Save Reading'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
+      // Drain the sequential save timers (800ms provider + 1500ms screen)
+      // before the tree is disposed.
+      await tester.pump(const Duration(milliseconds: 2500));
       await tester.pumpAndSettle();
       expect(find.text('Save Reading'), findsOneWidget);
     });

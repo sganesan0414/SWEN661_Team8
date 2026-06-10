@@ -14,7 +14,6 @@ import 'care_team_screen.dart';
 import 'health_metrics_screen.dart';
 import 'health_reports_screen.dart';
 import 'login_screen.dart';
-
 import 'pharmacy.dart';
 import 'reminders.dart';
 
@@ -46,17 +45,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   void _onNavTap(int index) {
     HapticFeedback.selectionClick();
-    if (index == 5) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const UserProfileScreen()),
-      );
-    } else if (index == 6) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const SettingsScreen()),
-      );
-    } else {
-      setState(() => _navIndex = index);
-    }
+    setState(() => _navIndex = index);
+  }
+
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+    );
+  }
+
+  void _openProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const UserProfileScreen()),
+    );
   }
 
   void _signOut() {
@@ -73,6 +74,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       appBar: AppBar(
         title: Text(_appBarTitles[_navIndex]),
         actions: [
+          Semantics(
+            button: true,
+            label: 'Open settings',
+            child: IconButton(
+              icon: const Icon(Icons.settings_outlined, color: Colors.white),
+              onPressed: _openSettings,
+              tooltip: 'Settings',
+            ),
+          ),
           Semantics(
             button: true,
             label: 'Sign out',
@@ -140,9 +150,19 @@ class _HomeTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Good Morning, $displayName',
-                  style: AppTextStyles.displayLarge.copyWith(color: Colors.white),
+                GestureDetector(
+                  onTap: () {
+                    final dashState = context.findAncestorStateOfType<_DashboardScreenState>();
+                    dashState?._openProfile();
+                  },
+                  child: Semantics(
+                    button: true,
+                    label: 'Open profile for $displayName',
+                    child: Text(
+                      'Good Morning, $displayName',
+                      style: AppTextStyles.displayLarge.copyWith(color: Colors.white),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -190,7 +210,7 @@ class _HomeTab extends ConsumerWidget {
           Text('Quick Actions', style: AppTextStyles.headlineMedium),
           const SizedBox(height: 14),
           GridView.count(
-            crossAxisCount: 4,
+            crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: 10,
@@ -229,6 +249,14 @@ class _HomeTab extends ConsumerWidget {
                 label: 'Reports',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const HealthReportsScreen()),
+                ),
+              ),
+              QuickActionTile(
+                icon: Icons.description_outlined,
+                iconColor: const Color.fromARGB(255, 129, 111, 201),
+                label: 'Pharmacy',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PharmacyScreen()),
                 ),
               ),
             ],
@@ -363,14 +391,17 @@ class _MedicationsTabState extends ConsumerState<_MedicationsTab> {
             ),
           ),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(child: StatCard(icon: Icons.medication, iconColor: AppColors.primary, value: '${state.medications.length}', label: 'Total Medications')),
-              const SizedBox(width: 12),
-              Expanded(child: StatCard(icon: Icons.check_circle_outline, iconColor: AppColors.success, value: '${state.takenCount}', label: 'Taken Today')),
-              const SizedBox(width: 12),
-              Expanded(child: StatCard(icon: Icons.schedule, iconColor: AppColors.warning, value: '${state.upcomingCount}', label: 'Upcoming')),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: StatCard(icon: Icons.medication, iconColor: AppColors.primary, value: '${state.medications.length}', label: 'Medications')),
+                const SizedBox(width: 12),
+                Expanded(child: StatCard(icon: Icons.check_circle_outline, iconColor: AppColors.success, value: '${state.takenCount}', label: 'Taken Today')),
+                const SizedBox(width: 12),
+                Expanded(child: StatCard(icon: Icons.schedule, iconColor: AppColors.warning, value: '${state.upcomingCount}', label: 'Upcoming')),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           if (filtered.isEmpty)
@@ -461,7 +492,7 @@ class _MedCard extends StatelessWidget {
             Text(med.schedule, style: AppTextStyles.bodyMedium),
           ]),
           const SizedBox(height: 14),
-          if (!med.taken)
+          if (!med.taken || isCooling)
             ElevatedButton.icon(
               onPressed: isCooling ? null : onMarkTaken,
               icon: isCooling

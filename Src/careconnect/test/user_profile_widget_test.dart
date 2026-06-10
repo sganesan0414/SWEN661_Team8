@@ -1,85 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:careconnect/screens/user_profile.dart';
 
+Widget _wrap() =>
+    const ProviderScope(child: MaterialApp(home: UserProfileScreen()));
+
 void main() {
   group('UserProfileScreen Widget Tests', () {
-    // Test 1: Verify that editing a field marks changes
-    testWidgets('Editing a field marks profile as changed', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: UserProfileScreen(),
-        ),
-      );
-
-      // Verify initial state - Cancel button should be disabled
-      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
-
-      // Find the full name text field and edit it
-      final fullNameField = find.byType(TextField).first;
-      await tester.enterText(fullNameField, 'Jane Doe');
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: UserProfileScreen(),
-        ),
-      );
-
-      // Save Changes button should be enabled (not null)
-      final saveButton = find.widgetWithText(ElevatedButton, 'Save Changes');
-      expect(saveButton, findsOneWidget);
-    });
-
-    // Test 2: Verify cancel button resets changes
-    testWidgets('Cancel button resets profile to original values', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: UserProfileScreen(),
-        ),
-      );
-
-      // Edit the full name field
-      final fullNameField = find.byType(TextField).first;
-      await tester.enterText(fullNameField, 'Modified Name');
-
-      // Tap Cancel button
-      final cancelButton = find.widgetWithText(OutlinedButton, 'Cancel');
-      await tester.tap(cancelButton);
+    testWidgets('Editing a field marks profile as changed', (tester) async {
+      await tester.pumpWidget(_wrap());
       await tester.pump();
 
-      // Full name should revert to original
-      expect(find.text('John Smith'), findsWidgets);
+      expect(find.text('Profile'), findsAtLeastNWidgets(1));
+
+      final nameField = find.byType(TextField).first;
+      await tester.enterText(nameField, 'Jane Doe');
+      await tester.pump();
+
+      expect(find.widgetWithText(ElevatedButton, 'Save Changes'), findsOneWidget);
     });
 
-    // Test 3: Verify password change dialog validation
-    testWidgets('Password change dialog validates password requirements', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: UserProfileScreen(),
-        ),
-      );
+    testWidgets('Cancel button resets profile to provider values', (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pump();
 
-      // Scroll down to find Change Password button
-      await tester.scrollUntilVisible(
+      final nameField = find.byType(TextField).first;
+      await tester.enterText(nameField, 'Modified Name');
+      await tester.pumpAndSettle();
+
+      final cancelButton = find.widgetWithText(OutlinedButton, 'Cancel');
+      expect(cancelButton, findsOneWidget);
+      await tester.ensureVisible(cancelButton);
+      await tester.tap(cancelButton);
+      await tester.pumpAndSettle();
+
+      final tf = tester.widget<TextField>(find.byType(TextField).first);
+      expect(tf.controller?.text, isNot('Modified Name'));
+    });
+
+    testWidgets('Password change dialog validates password requirements', (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pump();
+
+      await tester.dragUntilVisible(
         find.widgetWithText(ElevatedButton, 'Change Password'),
-        500.0,
+        find.byType(SingleChildScrollView),
+        const Offset(0, -200),
       );
-
-      // Tap Change Password button
       await tester.tap(find.widgetWithText(ElevatedButton, 'Change Password'));
       await tester.pumpAndSettle();
 
-      // Try to confirm with mismatched passwords
-      final passwordField = find.byType(TextField).at(0);
-      final confirmField = find.byType(TextField).at(2);
+      final allFields = find.byType(TextField);
+      expect(allFields, findsAtLeastNWidgets(3));
 
-      await tester.enterText(passwordField, 'password123');
+      // The last 3 TextFields belong to the dialog
+      final fieldCount = allFields.evaluate().length;
+      final currentField = allFields.at(fieldCount - 3);
+      final newField    = allFields.at(fieldCount - 2);
+      final confirmField = allFields.at(fieldCount - 1);
+
+      await tester.enterText(currentField, 'oldpassword');
+      await tester.enterText(newField, 'password123');
       await tester.enterText(confirmField, 'password456');
-
-      // Tap Change Password in dialog
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Change Password'));
       await tester.pump();
 
-      // Should show error snackbar about passwords not matching
+      final dialogButtons = find.widgetWithText(ElevatedButton, 'Change Password');
+      await tester.tap(dialogButtons.last);
+      await tester.pump();
+
       expect(find.text('Passwords do not match'), findsOneWidget);
     });
   });

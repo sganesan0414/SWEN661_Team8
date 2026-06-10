@@ -44,7 +44,7 @@ class _HealthReportsScreenState extends ConsumerState<HealthReportsScreen> {
           label: 'Home',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        leadingWidth: 100,
+        leadingWidth: 160,
       ),
       body: Column(
         children: [
@@ -55,14 +55,17 @@ class _HealthReportsScreenState extends ConsumerState<HealthReportsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(child: StatCard(icon: Icons.description_outlined, iconColor: AppColors.primary, value: '${reports.length}', label: 'Total Reports')),
-                      const SizedBox(width: 12),
-                      Expanded(child: StatCard(icon: Icons.calendar_month, iconColor: AppColors.accent, value: '$thisMonth', label: 'This Month')),
-                      const SizedBox(width: 12),
-                      Expanded(child: StatCard(icon: Icons.access_time, iconColor: AppColors.success, value: lastGenStr, label: 'Last Generated')),
-                    ],
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: StatCard(icon: Icons.description_outlined, iconColor: AppColors.primary, value: '${reports.length}', label: 'Total Reports')),
+                        const SizedBox(width: 12),
+                        Expanded(child: StatCard(icon: Icons.calendar_month, iconColor: AppColors.accent, value: '$thisMonth', label: 'This Month')),
+                        const SizedBox(width: 12),
+                        Expanded(child: StatCard(icon: Icons.access_time, iconColor: AppColors.success, value: lastGenStr, label: 'Last Generated')),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 24),
 
@@ -189,7 +192,12 @@ class _ReportCard extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => HapticFeedback.lightImpact(),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${report.title} downloaded')),
+                    );
+                  },
                   icon: const Icon(Icons.download_outlined, size: 18),
                   label: const Text('Download'),
                   style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),

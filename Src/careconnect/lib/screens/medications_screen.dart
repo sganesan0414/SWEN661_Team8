@@ -228,7 +228,7 @@ class _MedicationCard extends StatelessWidget {
               Text(med.schedule, style: AppTextStyles.bodyMedium),
             ]),
             const SizedBox(height: 14),
-            if (!med.taken)
+            if (!med.taken || isCooling)
               Semantics(
                 button: true,
                 label: 'Mark ${med.name} as taken',

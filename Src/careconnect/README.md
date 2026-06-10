@@ -121,13 +121,3 @@ A hosted coverage report has not yet been published. Run the commands above to g
      Brice Tikum
      David Oguh
      Sivakumar Ganesan
-
-
-# 8. AI usage summary (what did AI help with?)
-
-    As a team, we have used GitHub CoPilot and Claude for VS code AI to develop the screens and unit test .dart files. Also, we asked AI to fix the compilation and run time errors by providing a correct prompt.
-
-    We input the AI with the screen dart file to generate testase and the AI created the valid Junit and widget testcases. Those were ran  to make sure the screens were fully functional.
-
-
-  

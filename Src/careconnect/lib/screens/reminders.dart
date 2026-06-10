@@ -581,7 +581,7 @@ class _SettingRowState extends State<_SettingRow> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(widget.label, style: AppTextStyles.bodyMedium),
+        Expanded(child: Text(widget.label, style: AppTextStyles.bodyMedium)),
         Switch(
           value: _value,
           onChanged: (v) => setState(() => _value = v),
@@ -605,7 +605,7 @@ class _StatRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: AppTextStyles.bodyMedium),
+        Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(

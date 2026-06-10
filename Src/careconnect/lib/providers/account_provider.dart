@@ -50,6 +50,18 @@ class AccountNotifier extends Notifier<AccountState> {
   void signOut() {
     state = const AccountState();
   }
+
+  void updateDisplayName(String name) {
+    state = state.copyWith(displayName: name);
+  }
+
+  void updateEmail(String email) {
+    state = state.copyWith(email: email);
+  }
+
+  void updatePassword(String newPassword) {
+    // Mock
+  }
 }
 
 final accountProvider =

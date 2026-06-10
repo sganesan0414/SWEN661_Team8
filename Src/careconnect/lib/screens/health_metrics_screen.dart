@@ -52,7 +52,7 @@ class _HealthMetricsScreenState extends ConsumerState<HealthMetricsScreen> {
           label: 'Home',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        leadingWidth: 100,
+        leadingWidth: 160,
       ),
       body: Column(
         children: [

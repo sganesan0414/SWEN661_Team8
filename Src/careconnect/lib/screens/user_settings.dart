@@ -1,42 +1,37 @@
-import 'package:careconnect/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
+import '../components/widgets.dart';
+import '../providers/account_provider.dart';
+import 'user_profile.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  // Visual Settings
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _highContrastMode = false;
   double _textSize = 16;
   double _contrastLevel = 100;
   bool _screenMagnification = false;
-
-  // Audio & Alerts
   bool _screenReader = true;
   bool _soundAlerts = false;
 
-  void _goBack() {
-    if (!mounted) return;
-    //Navigator.of(context).pop();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const DashboardScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final account = ref.watch(accountProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _goBack,
+        leading: LabeledBackButton(
+          label: 'Home',
+          onPressed: () => Navigator.of(context).pop(),
         ),
+        leadingWidth: 160,
         title: const Text('Settings'),
         elevation: 0,
       ),
@@ -46,16 +41,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Text('Settings', style: AppTextStyles.displayLarge),              
+              Text('Settings', style: AppTextStyles.displayLarge),
               const SizedBox(height: 8),
               Text(
-                'Manage your account and accessibility preferences',
+                'Manage your accessibility preferences',
                 style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 32),
 
-              // Account Information Section
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -69,329 +62,124 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+                        const Icon(Icons.person_outline, color: AppColors.primary, size: 20),
                         const SizedBox(width: 8),
-                        Text('Account Information', style: AppTextStyles.titleLarge),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Update your personal details and contact information',
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                    ),
-                    const Divider(height: 28),
-
-                    // Full Name and Email Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Full Name', style: AppTextStyles.labelLarge),
-                              const SizedBox(height: 6),
-                              Text('Sarah Johnson', style: AppTextStyles.bodyMedium),
-                            ],
+                        Text('Account', style: AppTextStyles.titleLarge),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const UserProfileScreen()),
                           ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Email Address', style: AppTextStyles.labelLarge),
-                              const SizedBox(height: 6),
-                              Text('sarah.johnson@email.com', style: AppTextStyles.bodyMedium),
-                            ],
-                          ),
+                          child: const Text('Edit Profile'),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-
-                    // Phone and Location Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Phone Number', style: AppTextStyles.labelLarge),
-                              const SizedBox(height: 6),
-                              Text('(555) 123-4567', style: AppTextStyles.bodyMedium),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Location', style: AppTextStyles.labelLarge),
-                              const SizedBox(height: 6),
-                              Text('San Francisco, CA', style: AppTextStyles.bodyMedium),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Change Password Button
-                    Semantics(
-                      button: true,
-                      label: 'Change password',
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Change password feature coming soon')),
-                          );
-                        },
-                        icon: const Icon(Icons.lock_outline),
-                        label: const Text('Change Password'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: AppColors.primary,
-                          side: BorderSide(color: AppColors.primary),
-                        ),
-                      ),
-                    ),
+                    const Divider(height: 24),
+                    _InfoRow(label: 'Name', value: account.displayName.isNotEmpty ? account.displayName : '—'),
+                    const SizedBox(height: 12),
+                    _InfoRow(label: 'Email', value: account.email.isNotEmpty ? account.email : '—'),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Visual Settings and Audio & Alerts (2 columns)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              _SettingsCard(
+                icon: Icons.visibility_outlined,
+                title: 'Visual Settings',
+                subtitle: 'Adjust display options for better visibility',
                 children: [
-                  // Visual Settings
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.border, width: 1),
-                      ),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Visual Settings', style: AppTextStyles.titleLarge),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Adjust display options for better visibility',
-                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // High Contrast Mode
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('High Contrast Mode', style: AppTextStyles.labelLarge),
-                                  Text(
-                                    'Enhance color contrast for improved readability',
-                                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-                                  ),
-                                ],
-                              ),
-                              Semantics(
-                                label: 'High contrast mode toggle',
-                                button: true,
-                                enabled: true,
-                                toggled: _highContrastMode,
-                                onTap: () => setState(() => _highContrastMode = !_highContrastMode),
-                                child: Switch(
-                                  value: _highContrastMode,
-                                  onChanged: (value) => setState(() => _highContrastMode = value),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Text Size Slider
-                          Text('Text Size', style: AppTextStyles.labelLarge),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Semantics(
-                                  slider: true,
-                                  label: 'Text size slider',
-                                  onIncrease: () {
-                                    if (_textSize < 24) {
-                                      setState(() => _textSize += 1);
-                                    }
-                                  },
-                                  onDecrease: () {
-                                    if (_textSize > 12) {
-                                      setState(() => _textSize -= 1);
-                                    }
-                                  },
-                                  child: Slider(
-                                    value: _textSize,
-                                    min: 12,
-                                    max: 24,
-                                    divisions: 12,
-                                    onChanged: (value) => setState(() => _textSize = value),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text('${_textSize.toInt()}px', style: AppTextStyles.bodyMedium),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Contrast Level Slider
-                          Text('Contrast Level', style: AppTextStyles.labelLarge),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Semantics(
-                                  slider: true,
-                                  label: 'Contrast level slider',
-                                  onIncrease: () {
-                                    if (_contrastLevel < 100) {
-                                      setState(() => _contrastLevel += 5);
-                                    }
-                                  },
-                                  onDecrease: () {
-                                    if (_contrastLevel > 50) {
-                                      setState(() => _contrastLevel -= 5);
-                                    }
-                                  },
-                                  child: Slider(
-                                    value: _contrastLevel,
-                                    min: 50,
-                                    max: 100,
-                                    divisions: 10,
-                                    onChanged: (value) => setState(() => _contrastLevel = value),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text('${_contrastLevel.toInt()}%', style: AppTextStyles.bodyMedium),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Screen Magnification
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Screen Magnification', style: AppTextStyles.labelLarge),
-                                  Text(
-                                    'Enable zoom features for easier viewing',
-                                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-                                  ),
-                                ],
-                              ),
-                              Semantics(
-                                label: 'Screen magnification toggle',
-                                button: true,
-                                enabled: true,
-                                toggled: _screenMagnification,
-                                onTap: () => setState(() => _screenMagnification = !_screenMagnification),
-                                child: Switch(
-                                  value: _screenMagnification,
-                                  onChanged: (value) => setState(() => _screenMagnification = value),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+                  _ToggleRow(
+                    label: 'High Contrast Mode',
+                    description: 'Enhance color contrast for improved readability',
+                    semanticsLabel: 'High contrast mode toggle',
+                    value: _highContrastMode,
+                    onChanged: (v) => setState(() => _highContrastMode = v),
                   ),
-                  const SizedBox(width: 20),
-
-                  // Audio & Alerts
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.border, width: 1),
+                  const SizedBox(height: 20),
+                  Text('Text Size', style: AppTextStyles.labelLarge),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Semantics(
+                          slider: true,
+                          label: 'Text size slider',
+                          onIncrease: () { if (_textSize < 24) setState(() => _textSize += 1); },
+                          onDecrease: () { if (_textSize > 12) setState(() => _textSize -= 1); },
+                          child: Slider(
+                            value: _textSize,
+                            min: 12,
+                            max: 24,
+                            divisions: 12,
+                            onChanged: (v) => setState(() => _textSize = v),
+                          ),
+                        ),
                       ),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Audio & Alerts', style: AppTextStyles.titleLarge),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Configure sound and screen reader options',
-                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Screen Reader
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Screen Reader', style: AppTextStyles.labelLarge),
-                                  Text(
-                                    'Enable text-to-speech for all content',
-                                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-                                  ),
-                                ],
-                              ),
-                              Semantics(
-                                label: 'Screen reader toggle',
-                                button: true,
-                                enabled: true,
-                                toggled: _screenReader,
-                                onTap: () => setState(() => _screenReader = !_screenReader),
-                                child: Switch(
-                                  value: _screenReader,
-                                  onChanged: (value) => setState(() => _screenReader = value),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Sound Alerts
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Sound Alerts', style: AppTextStyles.labelLarge),
-                                  Text(
-                                    'Play audio notifications for important events',
-                                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-                                  ),
-                                ],
-                              ),
-                              Semantics(
-                                label: 'Sound alerts toggle',
-                                button: true,
-                                enabled: true,
-                                toggled: _soundAlerts,
-                                onTap: () => setState(() => _soundAlerts = !_soundAlerts),
-                                child: Switch(
-                                  value: _soundAlerts,
-                                  onChanged: (value) => setState(() => _soundAlerts = value),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 44,
+                        child: Text('${_textSize.toInt()}px', style: AppTextStyles.bodyMedium),
                       ),
-                    ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Contrast Level', style: AppTextStyles.labelLarge),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Semantics(
+                          slider: true,
+                          label: 'Contrast level slider',
+                          onIncrease: () { if (_contrastLevel < 100) setState(() => _contrastLevel += 5); },
+                          onDecrease: () { if (_contrastLevel > 50) setState(() => _contrastLevel -= 5); },
+                          child: Slider(
+                            value: _contrastLevel,
+                            min: 50,
+                            max: 100,
+                            divisions: 10,
+                            onChanged: (v) => setState(() => _contrastLevel = v),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 44,
+                        child: Text('${_contrastLevel.toInt()}%', style: AppTextStyles.bodyMedium),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _ToggleRow(
+                    label: 'Screen Magnification',
+                    description: 'Enable zoom features for easier viewing',
+                    semanticsLabel: 'Screen magnification toggle',
+                    value: _screenMagnification,
+                    onChanged: (v) => setState(() => _screenMagnification = v),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              _SettingsCard(
+                icon: Icons.volume_up_outlined,
+                title: 'Audio & Alerts',
+                subtitle: 'Configure sound and screen reader options',
+                children: [
+                  _ToggleRow(
+                    label: 'Screen Reader',
+                    description: 'Enable text-to-speech for all content',
+                    semanticsLabel: 'Screen reader toggle',
+                    value: _screenReader,
+                    onChanged: (v) => setState(() => _screenReader = v),
+                  ),
+                  const SizedBox(height: 20),
+                  _ToggleRow(
+                    label: 'Sound Alerts',
+                    description: 'Play audio notifications for important events',
+                    semanticsLabel: 'Sound alerts toggle',
+                    value: _soundAlerts,
+                    onChanged: (v) => setState(() => _soundAlerts = v),
                   ),
                 ],
               ),
@@ -399,6 +187,113 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _InfoRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 60,
+          child: Text(label, style: AppTextStyles.labelLarge),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Text(value, style: AppTextStyles.bodyMedium)),
+      ],
+    );
+  }
+}
+
+class _SettingsCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+
+  const _SettingsCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              Text(title, style: AppTextStyles.titleLarge),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(subtitle, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+          const SizedBox(height: 20),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _ToggleRow extends StatelessWidget {
+  final String label;
+  final String description;
+  final String semanticsLabel;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _ToggleRow({
+    required this.label,
+    required this.description,
+    required this.semanticsLabel,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: AppTextStyles.labelLarge),
+              const SizedBox(height: 2),
+              Text(description, style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Semantics(
+          label: semanticsLabel,
+          button: true,
+          enabled: true,
+          toggled: value,
+          child: Switch(value: value, onChanged: onChanged),
+        ),
+      ],
     );
   }
 }

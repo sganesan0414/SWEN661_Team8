@@ -26,14 +26,17 @@ class AppointmentsScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(child: StatCard(icon: Icons.calendar_today, iconColor: AppColors.primary, value: '${appointments.length}', label: 'Total')),
-              const SizedBox(width: 12),
-              Expanded(child: StatCard(icon: Icons.upcoming, iconColor: AppColors.warning, value: '${upcoming.length}', label: 'Upcoming')),
-              const SizedBox(width: 12),
-              Expanded(child: StatCard(icon: Icons.check_circle_outline, iconColor: AppColors.success, value: '${completed.length}', label: 'Completed')),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: StatCard(icon: Icons.calendar_today, iconColor: AppColors.primary, value: '${appointments.length}', label: 'Total')),
+                const SizedBox(width: 12),
+                Expanded(child: StatCard(icon: Icons.upcoming, iconColor: AppColors.warning, value: '${upcoming.length}', label: 'Upcoming')),
+                const SizedBox(width: 12),
+                Expanded(child: StatCard(icon: Icons.check_circle_outline, iconColor: AppColors.success, value: '${completed.length}', label: 'Completed')),
+              ],
+            ),
           ),
           if (soonAppt.isNotEmpty) ...[
             const SizedBox(height: 16),

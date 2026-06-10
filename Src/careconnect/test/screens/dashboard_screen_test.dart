@@ -44,20 +44,6 @@ void main() {
     expect(find.text('My Medications'), findsOneWidget);
   });
 
-  testWidgets('reminders tab shows Coming Soon', (tester) async {
-    final mockNotif = MockNotificationService();
-    when(() => mockNotif.scheduleAppointmentReminder(any())).thenAnswer((_) async {});
-    when(() => mockNotif.cancelAppointmentReminders(any())).thenAnswer((_) async {});
-
-    await tester.pumpWidget(wrap([
-      notificationServiceProvider.overrideWithValue(mockNotif),
-    ]));
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.notifications_outlined));
-    await tester.pump();
-    expect(find.text('Coming Soon'), findsOneWidget);
-  });
-
   testWidgets('quick action navigates to Health Metrics screen', (tester) async {
     final mockNotif = MockNotificationService();
     when(() => mockNotif.scheduleAppointmentReminder(any())).thenAnswer((_) async {});
@@ -67,6 +53,7 @@ void main() {
       notificationServiceProvider.overrideWithValue(mockNotif),
     ]));
     await tester.pump();
+    await tester.ensureVisible(find.text('Health\nMetrics'));
     await tester.tap(find.text('Health\nMetrics'));
     await tester.pumpAndSettle();
     expect(find.text('Health Metrics'), findsOneWidget);
@@ -81,6 +68,7 @@ void main() {
       notificationServiceProvider.overrideWithValue(mockNotif),
     ]));
     await tester.pump();
+    await tester.ensureVisible(find.text('Reports'));
     await tester.tap(find.text('Reports'));
     await tester.pumpAndSettle();
     expect(find.text('Health Reports'), findsOneWidget);

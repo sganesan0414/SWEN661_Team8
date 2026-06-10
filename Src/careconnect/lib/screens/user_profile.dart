@@ -1,30 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../theme/app_theme.dart';
+import '../providers/account_provider.dart';
 
-class UserProfileScreen extends StatefulWidget {
+class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key});
 
   @override
-  State<UserProfileScreen> createState() => _UserProfileScreenState();
+  ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _UserProfileScreenState extends State<UserProfileScreen> {
-  final _fullNameController = TextEditingController(text: 'John Smith');
-  final _emailController = TextEditingController(text: 'john.smith@example.com');
-  final _phoneController = TextEditingController(text: '+1 (555) 123-4567');
-  final _roleController = TextEditingController(text: 'Primary Caregiver');
-  final _careNotesController = TextEditingController(
-    text: 'Patient requires high contrast mode and large text for visual impairment.',
-  );
+class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
+  late final TextEditingController _fullNameController;
+  late final TextEditingController _emailController;
+  final _phoneController = TextEditingController();
+  final _roleController = TextEditingController();
+  final _careNotesController = TextEditingController();
 
   File? _profileImage;
   bool _isLoading = false;
-  bool _hasChanges = false;
 
-  void _onFieldChanged() {
-    setState(() => _hasChanges = true);
+  @override
+  void initState() {
+    super.initState();
+    final account = ref.read(accountProvider);
+    _fullNameController = TextEditingController(text: account.displayName);
+    _emailController = TextEditingController(text: account.email);
   }
 
   Future<void> _pickImage() async {
@@ -36,18 +39,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         maxWidth: 512,
       );
 
+      if (!mounted) return;
       if (pickedFile != null) {
-        setState(() {
-          _profileImage = File(pickedFile.path);
-          _hasChanges = true;
-        });
-      }
-      else {
+        setState(() => _profileImage = File(pickedFile.path));
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No image selected')),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error picking image: $e')),
       );
@@ -56,42 +57,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Future<void> _saveChanges() async {
     setState(() => _isLoading = true);
-
-    try {
-      // TODO: Implement API call to save profile changes
-      await Future.delayed(const Duration(milliseconds: 1000));
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _hasChanges = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving changes: $e')),
-        );
-      }
-    }
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    ref.read(accountProvider.notifier).updateDisplayName(_fullNameController.text.trim());
+    ref.read(accountProvider.notifier).updateEmail(_emailController.text.trim());
+    setState(() => _isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profile updated successfully'), duration: Duration(seconds: 2)),
+    );
   }
 
   void _cancelChanges() {
+    final account = ref.read(accountProvider);
     setState(() {
-      _fullNameController.text = 'John Smith';
-      _emailController.text = 'john.smith@example.com';
-      _phoneController.text = '+1 (555) 123-4567';
-      _roleController.text = 'Primary Caregiver';
-      _careNotesController.text = 'Patient requires high contrast mode and large text for visual impairment.';
+      _fullNameController.text = account.displayName;
+      _emailController.text = account.email;
+      _phoneController.clear();
+      _roleController.clear();
+      _careNotesController.clear();
       _profileImage = null;
-      _hasChanges = false;
     });
   }
 
@@ -180,7 +164,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       );
                       return;
                     }
-                    // TODO: Implement password change API call
+                    ref.read(accountProvider.notifier).updatePassword(newPasswordController.text);
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Password changed successfully')),
@@ -208,6 +192,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final account = ref.watch(accountProvider);
+    final initials = account.displayName.isNotEmpty
+        ? account.displayName.trim().split(' ').map((w) => w[0]).take(2).join().toUpperCase()
+        : '?';
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -228,12 +217,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Personal Information Card
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
-                  side: BorderSide(color: AppColors.border, width: 1),
+                  side: const BorderSide(color: AppColors.border, width: 1),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -248,7 +236,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Profile Photo
                       SizedBox(
                         height: 120,
                         child: Row(
@@ -258,7 +245,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               width: 100,
                               height: 100,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.2),
+                                color: AppColors.primary.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: _profileImage != null && _profileImage!.existsSync()
@@ -267,25 +254,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                       child: Image.file(
                                         _profileImage!,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Center(
-                                            child: Text(
-                                              'JS',
-                                              style: AppTextStyles.displayLarge.copyWith(
-                                                color: AppColors.primary,
-                                              ),
-                                            ),
-                                          );
-                                        },
+                                        errorBuilder: (_, _, _) => Center(
+                                          child: Text(initials, style: AppTextStyles.displayLarge.copyWith(color: AppColors.primary)),
+                                        ),
                                       ),
                                     )
                                   : Center(
-                                      child: Text(
-                                        'JS',
-                                        style: AppTextStyles.displayLarge.copyWith(
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
+                                      child: Text(initials, style: AppTextStyles.displayLarge.copyWith(color: AppColors.primary)),
                                     ),
                             ),
                             const SizedBox(width: 20),
@@ -297,16 +272,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     onPressed: _pickImage,
                                     icon: const Icon(Icons.camera_alt_outlined),
                                     label: const Text('Change Photo'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primary,
-                                    ),
+                                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
                                     'JPG, PNG or GIF. Max 2MB.',
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
                                   ),
                                 ],
                               ),
@@ -318,110 +289,88 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       const Divider(),
                       const SizedBox(height: 20),
 
-                      // Full Name
                       Text('Full Name', style: AppTextStyles.labelLarge),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _fullNameController,
-                        onChanged: (_) => _onFieldChanged(),
+                        onChanged: (_) {},
                         decoration: InputDecoration(
                           hintText: 'Enter full name',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                       const SizedBox(height: 16),
 
-                      // Email
                       Text('Email Address', style: AppTextStyles.labelLarge),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _emailController,
-                        onChanged: (_) => _onFieldChanged(),
+                        onChanged: (_) {},
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           hintText: 'Enter email',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                       const SizedBox(height: 16),
 
-                      // Phone
                       Text('Phone Number', style: AppTextStyles.labelLarge),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _phoneController,
-                        onChanged: (_) => _onFieldChanged(),
+                        onChanged: (_) {},
                         keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
                           hintText: 'Enter phone',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                       const SizedBox(height: 16),
 
-                      // Role
                       Text('Role', style: AppTextStyles.labelLarge),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _roleController,
-                        onChanged: (_) => _onFieldChanged(),
+                        onChanged: (_) {},
                         decoration: InputDecoration(
                           hintText: 'Enter role',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                       const SizedBox(height: 16),
 
-                      // Care Notes
                       Text('Care Notes', style: AppTextStyles.labelLarge),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _careNotesController,
-                        onChanged: (_) => _onFieldChanged(),
+                        onChanged: (_) {},
                         maxLines: 3,
                         decoration: InputDecoration(
                           hintText: 'Enter care notes',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                       const SizedBox(height: 24),
 
-                      // Buttons
                       Row(
                         children: [
                           ElevatedButton(
                             onPressed: _isLoading ? null : _saveChanges,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
-                              minimumSize: const Size(120, 40),
+                              minimumSize: const Size(120, 48),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
+                                    width: 20, height: 20,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                   )
                                 : const Text('Save Changes'),
                           ),
                           const SizedBox(width: 12),
                           OutlinedButton(
-                            onPressed: _hasChanges ? _cancelChanges : null,
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(120, 40),
-                            ),
+                            onPressed: _cancelChanges,
+                            style: OutlinedButton.styleFrom(minimumSize: const Size(120, 48)),
                             child: const Text('Cancel'),
                           ),
                         ],
@@ -432,12 +381,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Account Security Card
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
-                  side: BorderSide(color: AppColors.border, width: 1),
+                  side: const BorderSide(color: AppColors.border, width: 1),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -458,7 +406,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           foregroundColor: AppColors.primary,
-                          side: BorderSide(color: AppColors.primary),
+                          side: const BorderSide(color: AppColors.primary),
                         ),
                       ),
                     ],

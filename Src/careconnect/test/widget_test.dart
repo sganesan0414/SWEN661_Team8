@@ -23,8 +23,12 @@ void main() {
         child: MaterialApp(theme: AppTheme.theme, home: const LoginScreen()),
       ),
     );
-    await tester.tap(find.text('Sign In'));
+    final signInButton = find.widgetWithText(ElevatedButton, 'Sign In');
+    await tester.ensureVisible(signInButton);
+    await tester.tap(signInButton);
     await tester.pump();
     expect(find.text('Signing in…'), findsOneWidget);
+    // Drain the Future.delayed timers from signIn()/_handleSignIn().
+    await tester.pump(const Duration(milliseconds: 4000));
   });
 }

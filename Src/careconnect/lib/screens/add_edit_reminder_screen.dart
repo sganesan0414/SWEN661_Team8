@@ -115,7 +115,6 @@ class _AddEditReminderScreenState extends ConsumerState<AddEditReminderScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Type selector ──────────────────────────────────────────
             Text('Reminder Type', style: AppTextStyles.labelLarge),
             const SizedBox(height: 8),
             Row(
@@ -142,7 +141,6 @@ class _AddEditReminderScreenState extends ConsumerState<AddEditReminderScreen> {
             ),
             const SizedBox(height: 20),
 
-            // ── Title ──────────────────────────────────────────────────
             Text('Title', style: AppTextStyles.labelLarge),
             const SizedBox(height: 8),
             TextField(
@@ -154,7 +152,6 @@ class _AddEditReminderScreenState extends ConsumerState<AddEditReminderScreen> {
             ),
             const SizedBox(height: 16),
 
-            // ── Subtitle ───────────────────────────────────────────────
             Text('Details (optional)', style: AppTextStyles.labelLarge),
             const SizedBox(height: 8),
             TextField(
@@ -165,7 +162,6 @@ class _AddEditReminderScreenState extends ConsumerState<AddEditReminderScreen> {
             ),
             const SizedBox(height: 20),
 
-            // ── Time picker ────────────────────────────────────────────
             Text('Time', style: AppTextStyles.labelLarge),
             const SizedBox(height: 8),
             InkWell(
@@ -193,7 +189,6 @@ class _AddEditReminderScreenState extends ConsumerState<AddEditReminderScreen> {
             ),
             const SizedBox(height: 20),
 
-            // ── Days ───────────────────────────────────────────────────
             Text('Repeat On', style: AppTextStyles.labelLarge),
             const SizedBox(height: 12),
             Row(
@@ -255,7 +250,6 @@ class _AddEditReminderScreenState extends ConsumerState<AddEditReminderScreen> {
             ),
             const SizedBox(height: 32),
 
-            // ── Save ───────────────────────────────────────────────────
             ElevatedButton(
               onPressed: _save,
               style: ElevatedButton.styleFrom(

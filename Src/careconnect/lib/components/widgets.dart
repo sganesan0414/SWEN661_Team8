@@ -86,16 +86,16 @@ class LabeledBackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Go back to $label',
+      label: 'Return to $label',
       child: TextButton.icon(
         onPressed: onPressed ?? () => Navigator.of(context).maybePop(),
         icon: const Icon(Icons.arrow_back, size: 20),
-        label: Text(label),
+        label: Text('Return to $label'),
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
           textStyle: AppTextStyles.labelLarge,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          minimumSize: const Size(48, 48), // WCAG touch target
+          minimumSize: const Size(80, 48), // WCAG touch target
         ),
       ),
     );
@@ -113,13 +113,11 @@ class CareConnectBottomNav extends StatelessWidget {
   });
 
   static const _items = [
-    BottomNavigationBarItem(icon: Icon(Icons.home_outlined),     activeIcon: Icon(Icons.home),        label: 'Home'),
-    BottomNavigationBarItem(icon: Icon(Icons.medication_outlined),activeIcon: Icon(Icons.medication), label: 'Medications'),
-    BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), activeIcon: Icon(Icons.calendar_today), label: 'Appointments'),
-    BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.notifications), label: 'Reminders'),
-    BottomNavigationBarItem(icon: Icon(Icons.people_outline),    activeIcon: Icon(Icons.people),      label: 'Care Team'),
-    BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.people), label: 'Profile'),
-    BottomNavigationBarItem(icon: Icon(Icons.people_outline),    activeIcon: Icon(Icons.people),      label: 'Settings'),
+    BottomNavigationBarItem(icon: Icon(Icons.home_outlined),              activeIcon: Icon(Icons.home),          label: 'Home'),
+    BottomNavigationBarItem(icon: Icon(Icons.medication_outlined),        activeIcon: Icon(Icons.medication),    label: 'Medications'),
+    BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined),    activeIcon: Icon(Icons.calendar_today),label: 'Appointments'),
+    BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined),     activeIcon: Icon(Icons.notifications), label: 'Reminders'),
+    BottomNavigationBarItem(icon: Icon(Icons.people_outline),             activeIcon: Icon(Icons.people),        label: 'Care Team'),
   ];
 
   @override
@@ -183,7 +181,7 @@ class StatCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(value, style: AppTextStyles.headlineMedium),
             const SizedBox(height: 2),
-            Text(label, style: AppTextStyles.bodyMedium),
+            Text(label, style: AppTextStyles.bodyMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
             if (subtitle != null) ...[
               const SizedBox(height: 2),
               Text(subtitle!, style: AppTextStyles.caption.copyWith(color: AppColors.success)),

@@ -47,7 +47,7 @@ class HealthReportsNotifier extends Notifier<HealthReportsState> {
   }
 
   void shareReport(String id) {
-    // Stub - real implementation would invoke platform share sheet
+    // Mock
   }
 }
 

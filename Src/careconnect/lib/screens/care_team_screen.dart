@@ -20,12 +20,15 @@ class CareTeamScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(child: StatCard(icon: Icons.people, iconColor: AppColors.primary, value: '${members.length}', label: 'Total Members')),
-              const SizedBox(width: 12),
-              Expanded(child: StatCard(icon: Icons.emergency, iconColor: Colors.red, value: '$emergencyCount', label: 'Emergency Contacts')),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: StatCard(icon: Icons.people, iconColor: AppColors.primary, value: '${members.length}', label: 'Total Members')),
+                const SizedBox(width: 12),
+                Expanded(child: StatCard(icon: Icons.emergency, iconColor: Colors.red, value: '$emergencyCount', label: 'Emergency Contacts')),
+              ],
+            ),
           ),
           if (emergencyCount == 0) ...[
             const SizedBox(height: 16),

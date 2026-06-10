@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:careconnect/screens/create_account.dart';
 
 void main() {
   group('CreateAccountScreen Widget Tests', () {
-    // Test 1: Verify form validation - cannot proceed without agreeing to terms
+    // Test 1: Verify form validation 
     testWidgets('Cannot proceed without agreeing to Terms and Privacy Policy', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: CreateAccountScreen(),
+        const ProviderScope(
+          child: MaterialApp(
+            home: CreateAccountScreen(),
+          ),
         ),
       );
 
-      // Fill in all required fields
       final nameField = find.byType(TextFormField).at(0);
       final emailField = find.byType(TextFormField).at(1);
       final phoneField = find.byType(TextFormField).at(2);
@@ -25,21 +27,21 @@ void main() {
       await tester.enterText(passwordField, 'password123');
       await tester.enterText(confirmPasswordField, 'password123');
 
-      // Do NOT check the terms checkbox
-      // Try to click Continue button
       final continueButton = find.widgetWithText(ElevatedButton, 'Continue');
+      await tester.ensureVisible(continueButton);
       await tester.tap(continueButton);
       await tester.pump();
 
-      // Should show snackbar error about terms
       expect(find.text('Please agree to Terms of Service and Privacy Policy'), findsOneWidget);
     });
 
-    // Test 2: Verify password visibility toggle works
+    // Test 2: Verify password visibility works
     testWidgets('Password visibility toggle shows and hides password', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: CreateAccountScreen(),
+        const ProviderScope(
+          child: MaterialApp(
+            home: CreateAccountScreen(),
+          ),
         ),
       );
 
@@ -53,6 +55,7 @@ void main() {
       expect(visibilityButtons, findsWidgets);
 
       // Tap first visibility button (password field)
+      await tester.ensureVisible(visibilityButtons.first);
       await tester.tap(visibilityButtons.first);
       await tester.pump();
 
@@ -61,7 +64,9 @@ void main() {
       expect(find.byIcon(Icons.visibility_off_outlined), findsWidgets);
 
       // Tap again to hide
-      await tester.tap(find.byIcon(Icons.visibility_off_outlined).first);
+      final hideButton = find.byIcon(Icons.visibility_off_outlined).first;
+      await tester.ensureVisible(hideButton);
+      await tester.tap(hideButton);
       await tester.pump();
 
       // Should show visibility icon again
@@ -71,8 +76,10 @@ void main() {
     // Test 3: Verify complete account creation flow with validation
     testWidgets('Complete account creation flow validates all steps', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: CreateAccountScreen(),
+        const ProviderScope(
+          child: MaterialApp(
+            home: CreateAccountScreen(),
+          ),
         ),
       );
 
@@ -91,6 +98,7 @@ void main() {
 
       // Find and check the terms agreement checkbox
       final checkbox = find.byType(Checkbox);
+      await tester.ensureVisible(checkbox);
       await tester.tap(checkbox);
       await tester.pump();
 
@@ -99,6 +107,7 @@ void main() {
 
       // Click Continue button
       final continueButton = find.widgetWithText(ElevatedButton, 'Continue');
+      await tester.ensureVisible(continueButton);
       await tester.tap(continueButton);
       await tester.pump();
 

@@ -23,7 +23,8 @@ void main() {
 
     testWidgets('includes a dashboard back button label', (tester) async {
       await tester.pumpWidget(_wrap(const PharmacyScreen()));
-      expect(find.text('Dashboard'), findsOneWidget);
+      // LabeledBackButton renders the destination as "Return to Dashboard".
+      expect(find.textContaining('Dashboard'), findsWidgets);
       expect(find.byType(IconButton), findsWidgets);
     });
   });

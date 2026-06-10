@@ -2,9 +2,11 @@ import 'package:careconnect/screens/create_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:local_auth/local_auth.dart';
 import '../theme/app_theme.dart';
 import '../providers/account_provider.dart';
 import 'dashboard_screen.dart';
+import 'pin_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -36,13 +38,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _handleBiometric(String method) async {
     HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$method authentication requested'),
-        duration: const Duration(seconds: 2),
-      ),
+    final auth = LocalAuthentication();
+    final canCheck = await auth.canCheckBiometrics;
+    if (!canCheck) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$method not available on this device')),
+      );
+      return;
+    }
+    final didAuth = await auth.authenticate(
+      localizedReason: 'Sign in to CareConnect with $method',
+      biometricOnly: true,
     );
-    _goToDashboard();
+    if (!mounted) return;
+    if (didAuth) {
+      await ref.read(accountProvider.notifier).signIn('biometric-user', 'biometric');
+      if (mounted) _goToDashboard();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$method authentication failed')),
+      );
+    }
   }
 
   Future<void> _handleSignIn() async {
@@ -212,7 +229,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
                       : const Icon(Icons.login_outlined),
-                  label: Text(isLoading ? 'Signing in…' : 'Sign In'),
+                  label: Text((_buttonCooling || isLoading) ? 'Signing in…' : 'Sign In'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 58),
                     textStyle: AppTextStyles.titleLarge,
@@ -223,7 +240,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 16),
               TextButton.icon(
-                onPressed: () {},
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PinEntryScreen()),
+                ),
                 icon: const Icon(Icons.pin_outlined, size: 20),
                 label: const Text('Use PIN instead'),
                 style: TextButton.styleFrom(

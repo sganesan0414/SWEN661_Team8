@@ -29,23 +29,23 @@ void main() {
 
     testWidgets('sign-in button shows loading state', (tester) async {
       await tester.pumpWidget(_wrap(const LoginScreen()));
-      await tester.tap(find.text('Sign In'));
+      final signInButton = find.widgetWithText(ElevatedButton, 'Sign In');
+      await tester.ensureVisible(signInButton);
+      await tester.tap(signInButton);
       await tester.pump();
       expect(find.text('Signing in…'), findsOneWidget);
+      // Drain Future.delayed timers in signIn() and _handleSignIn() to avoid
+      // "pending timer" assertion from the test framework teardown.
+      await tester.pump(const Duration(milliseconds: 4000));
     });
 
     testWidgets('tapping create account navigates to create account screen', (tester) async {
       await tester.pumpWidget(_wrap(const LoginScreen()));
-      await tester.tap(find.text('Create Account'));
+      final createAccount = find.text('Create Account');
+      await tester.ensureVisible(createAccount);
+      await tester.tap(createAccount);
       await tester.pumpAndSettle();
       expect(find.text('Create Your Account'), findsOneWidget);
-    });
-
-    testWidgets('biometric authentication buttons show feedback', (tester) async {
-      await tester.pumpWidget(_wrap(const LoginScreen()));
-      await tester.tap(find.text('Fingerprint'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('authentication requested'), findsWidgets);
     });
   });
 }

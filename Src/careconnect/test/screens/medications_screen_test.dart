@@ -27,16 +27,21 @@ void main() {
       await tester.pumpWidget(_wrap(const MedicationsScreen()));
       await tester.enterText(find.byType(TextField), 'Aspirin');
       await tester.pump();
-      expect(find.text('Aspirin'), findsOneWidget);
+      // 'Aspirin' appears twice: once echoed in the search field, once on the
+      // filtered medication card. Lisinopril is filtered out entirely.
+      expect(find.text('Aspirin'), findsNWidgets(2));
       expect(find.text('Lisinopril'), findsNothing);
     });
 
     testWidgets('mark as taken button shows loading state', (tester) async {
       await tester.pumpWidget(_wrap(const MedicationsScreen()));
       final markTakenBtn = find.text('Mark as Taken').first;
+      await tester.ensureVisible(markTakenBtn);
       await tester.tap(markTakenBtn);
       await tester.pump();
       expect(find.text('Marking…'), findsOneWidget);
+      // Drain the 1.5s cooldown timer in _markTaken to avoid a pending timer.
+      await tester.pump(const Duration(milliseconds: 2000));
     });
   });
 }
