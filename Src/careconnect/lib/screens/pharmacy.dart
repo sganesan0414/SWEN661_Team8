@@ -146,6 +146,7 @@ class PharmacyScreen extends ConsumerWidget {
                           LabeledBackButton(
                             label: 'Dashboard',
                             onPressed: () => Navigator.of(context).maybePop(),
+                            foregroundColor: AppColors.primary,
                           ),
                           const SizedBox(height: 16),
                           _buildHeader(context, meds.length),
@@ -170,6 +171,7 @@ class PharmacyScreen extends ConsumerWidget {
                               LabeledBackButton(
                                 label: 'Dashboard',
                                 onPressed: () => Navigator.of(context).maybePop(),
+                                foregroundColor: AppColors.primary,
                               ),
                               const SizedBox(height: 16),
                               _buildHeader(context, meds.length),
@@ -473,6 +475,24 @@ class _PrescriptionCard extends StatelessWidget {
 
   const _PrescriptionCard({required this.med, required this.ext});
 
+  @override
+  Widget build(BuildContext context) {
+    final refillText = ext.refillsRemaining == 0
+        ? 'no refills remaining'
+        : '${ext.refillsRemaining} refills remaining';
+    return Semantics(
+      label: '${med.name} ${med.dose}, status: ${ext.status}, $refillText, pick up by ${ext.pickupBy}',
+      child: _PrescriptionCardBody(med: med, ext: ext),
+    );
+  }
+}
+
+class _PrescriptionCardBody extends StatelessWidget {
+  final Medication med;
+  final _PrescriptionExt ext;
+
+  const _PrescriptionCardBody({required this.med, required this.ext});
+
   void _showDetails(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -525,29 +545,36 @@ class _PrescriptionCard extends StatelessWidget {
                       const Icon(Icons.local_pharmacy_outlined,
                           size: 14, color: AppColors.textMuted),
                       const SizedBox(width: 4),
-                      Text(
-                        ext.pharmacyName,
-                        style: AppTextStyles.bodyMedium
-                            .copyWith(color: AppColors.textMuted),
+                      Flexible(
+                        child: Text(
+                          ext.pharmacyName,
+                          style: AppTextStyles.bodyMedium
+                              .copyWith(color: AppColors.textMuted),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ]),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: ext.statusBgColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: ext.statusColor.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  ext.status,
-                  style: AppTextStyles.caption.copyWith(
-                    color: ext.statusColor,
-                    fontWeight: FontWeight.w700,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 130),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: ext.statusBgColor,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: ext.statusColor.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    ext.status,
+                    style: AppTextStyles.caption.copyWith(
+                      color: ext.statusColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -593,7 +620,7 @@ class _PrescriptionCard extends StatelessWidget {
                   icon: const Icon(Icons.directions, size: 18),
                   label: const Text('Get Directions'),
                   style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 44),
+                    minimumSize: const Size(double.infinity, 48),
                     side: const BorderSide(color: AppColors.primary),
                     foregroundColor: AppColors.primary,
                   ),
@@ -608,7 +635,7 @@ class _PrescriptionCard extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 44),
+                    minimumSize: const Size(double.infinity, 48),
                   ),
                 ),
               ),
@@ -699,6 +726,7 @@ class _PrescriptionDetailSheet extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.close),
+                tooltip: 'Close prescription details',
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
@@ -807,7 +835,10 @@ class _PharmacyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final primaryLabel = isPrimary ? ', your primary pharmacy' : '';
+    return Semantics(
+      label: '$name pharmacy, rated $rating out of 5 stars$primaryLabel, $distance, $hours',
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -823,41 +854,49 @@ class _PharmacyCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                name,
-                style: AppTextStyles.titleLarge
-                    .copyWith(fontWeight: FontWeight.w700),
+              Flexible(
+                child: Text(
+                  name,
+                  style: AppTextStyles.titleLarge
+                      .copyWith(fontWeight: FontWeight.w700),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               if (isPrimary)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Primary',
-                    style: AppTextStyles.caption.copyWith(
-                        color: Colors.white, fontWeight: FontWeight.w700),
+                ExcludeSemantics(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Primary',
+                      style: AppTextStyles.caption.copyWith(
+                          color: Colors.white, fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ),
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              ...List.generate(
-                5,
-                (i) => Icon(
-                  i < rating.toInt() ? Icons.star : Icons.star_outline,
-                  size: 16,
-                  color: const Color(0xFFFFA500),
+          // Star icons are decorative — rating is in the Semantics label above
+          ExcludeSemantics(
+            child: Row(
+              children: [
+                ...List.generate(
+                  5,
+                  (i) => Icon(
+                    i < rating.toInt() ? Icons.star : Icons.star_outline,
+                    size: 16,
+                    color: const Color(0xFFFFA500),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text('$rating', style: AppTextStyles.caption),
-            ],
+                const SizedBox(width: 8),
+                Text('$rating', style: AppTextStyles.caption),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           _PharmacyInfoRow(icon: Icons.location_on_outlined, text: address),
@@ -885,7 +924,7 @@ class _PharmacyCard extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 40),
+                    minimumSize: const Size(double.infinity, 48),
                   ),
                 ),
               ),
@@ -896,7 +935,7 @@ class _PharmacyCard extends StatelessWidget {
                   icon: const Icon(Icons.call, size: 18),
                   label: const Text('Call'),
                   style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 40),
+                    minimumSize: const Size(double.infinity, 48),
                   ),
                 ),
               ),
@@ -904,7 +943,8 @@ class _PharmacyCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),   // closes Container
+    );   // closes Semantics
   }
 }
 

@@ -20,7 +20,9 @@ class ContextBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          const Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
+          ExcludeSemantics(
+            child: Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
+          ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -52,10 +54,11 @@ class ContextBar extends StatelessWidget {
               child: InkWell(
                 onTap: onHome,
                 borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(Icons.home_outlined, size: 18, color: AppColors.primary),
                       const SizedBox(width: 2),
@@ -75,11 +78,13 @@ class ContextBar extends StatelessWidget {
 class LabeledBackButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
+  final Color foregroundColor;
 
   const LabeledBackButton({
     super.key,
     this.label = 'Back',
     this.onPressed,
+    this.foregroundColor = AppColors.textOnPrimary,
   });
 
   @override
@@ -92,10 +97,10 @@ class LabeledBackButton extends StatelessWidget {
         icon: const Icon(Icons.arrow_back, size: 20),
         label: Text('Return to $label'),
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: foregroundColor,
           textStyle: AppTextStyles.labelLarge,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          minimumSize: const Size(80, 48), // WCAG touch target
+          minimumSize: const Size(80, 48),
         ),
       ),
     );
@@ -173,7 +178,7 @@ class StatCard extends StatelessWidget {
             Container(
               width: 36, height: 36,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.12),
+                color: iconColor.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor, size: 18),

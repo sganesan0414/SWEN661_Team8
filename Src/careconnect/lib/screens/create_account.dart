@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
+import '../providers/account_provider.dart';
 import 'login_screen.dart';
 
-class CreateAccountScreen extends StatefulWidget {
+class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key});
 
   @override
-  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
+  ConsumerState<CreateAccountScreen> createState() => _CreateAccountScreenState();
 }
 
-class _CreateAccountScreenState extends State<CreateAccountScreen> {
+class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -21,7 +23,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
   bool _isLoading = false;
-  int _currentStep = 0; // 0 for account info, 1 for health info, 2 for verification
+  final int _currentStep = 0; // 0 for account info, 1 for health info, 2 for verification
 
   void _goToLogin() {
     if (!mounted) return;
@@ -64,13 +66,31 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     setState(() { _isLoading = true; });
     HapticFeedback.lightImpact();
 
-    // TODO: Real account creation delay
-    await Future.delayed(const Duration(milliseconds: 1500));
+    // Persist the new account so the user can sign in with these credentials.
+    final error = await ref.read(accountProvider.notifier).register(
+          name: _nameController.text,
+          email: _emailController.text,
+          phone: _phoneController.text,
+          password: _passwordController.text,
+        );
 
-    if (mounted) {
-      setState(() { _isLoading = false; });
-      _goToLogin();
+    if (!mounted) return;
+    setState(() { _isLoading = false; });
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), duration: const Duration(seconds: 2)),
+      );
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Account created! Please sign in.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    _goToLogin();
   }
 
   @override
@@ -193,6 +213,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       label: _obscurePassword ? 'Show password' : 'Hide password',
                       button: true,
                       child: IconButton(
+                        tooltip: _obscurePassword ? 'Show password' : 'Hide password',
                         icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
                         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
@@ -223,6 +244,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       label: _obscureConfirmPassword ? 'Show password' : 'Hide password',
                       button: true,
                       child: IconButton(
+                        tooltip: _obscureConfirmPassword ? 'Show password' : 'Hide password',
                         icon: Icon(_obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
                         onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                       ),
@@ -232,10 +254,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Terms and Privacy Agreement
-              Semantics(
-                label: 'Terms of service and privacy policy agreement',
-                child: Row(
+              // Terms and Privacy Agreement.
+              // No outer Semantics wrapper here: it would merge with and mask the
+              // checkbox's own 'Agreement checkbox' label. The RichText below already
+              // announces the full "I agree to the Terms of Service…" text.
+              Row(
                   children: [
                     Semantics(
                       label: 'Agreement checkbox',
@@ -275,7 +298,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     ),
                   ],
                 ),
-              ),
               const SizedBox(height: 24),
 
               // Continue Button
@@ -301,11 +323,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Sign In Link
+              // Sign In Link — Wrap (not Row) so it reflows instead of
+              // overflowing horizontally at large text scales (WCAG 1.4.10 Reflow).
               Semantics(
                 label: 'Go back to sign in',
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text('Already have an account? ', style: AppTextStyles.bodyMedium),
                     TextButton(

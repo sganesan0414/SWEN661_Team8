@@ -18,6 +18,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
   bool _obscurePassword = true;
   bool _buttonCooling = false;
 
@@ -53,7 +55,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
     if (!mounted) return;
     if (didAuth) {
-      await ref.read(accountProvider.notifier).signIn('biometric-user', 'biometric');
+      await ref.read(accountProvider.notifier).signInTrusted();
       if (mounted) _goToDashboard();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,14 +64,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _handleForgotPassword() async {
+    final resetEmail = await showDialog<String>(
+      context: context,
+      builder: (_) => _ForgotPasswordDialog(initialEmail: _emailController.text),
+    );
+    if (!mounted || resetEmail == null) return;
+    // Pre-fill the email so the user can sign in immediately with the new password.
+    _emailController.text = resetEmail;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Password reset. Please sign in with your new password.'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
   Future<void> _handleSignIn() async {
     if (_buttonCooling) return;
     setState(() => _buttonCooling = true);
     HapticFeedback.lightImpact();
 
-    await ref
+    final error = await ref
         .read(accountProvider.notifier)
         .signIn(_emailController.text, _passwordController.text);
+
+    if (mounted && error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), duration: const Duration(seconds: 2)),
+      );
+    }
 
     await Future.delayed(const Duration(milliseconds: 1500));
     if (mounted) setState(() => _buttonCooling = false);
@@ -84,6 +108,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -163,57 +189,70 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              Semantics(
-                label: 'Email address input',
-                child: TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  autofillHints: const [AutofillHints.email],
-                  textInputAction: TextInputAction.next,
-                  style: AppTextStyles.bodyLarge,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'user@example.com',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              Semantics(
-                label: 'Password input',
-                child: TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  autofillHints: const [AutofillHints.password],
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _handleSignIn(),
-                  style: AppTextStyles.bodyLarge,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                    prefixIcon: const Icon(Icons.lock_outlined),
-                    suffixIcon: Semantics(
-                      label: _obscurePassword ? 'Show password' : 'Hide password',
-                      button: true,
-                      child: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              // WCAG 2.1 SC 2.1.1: Full keyboard navigation via FocusTraversalGroup
+              FocusTraversalGroup(
+                policy: ReadingOrderTraversalPolicy(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Semantics(
+                      label: 'Email address input',
+                      child: TextFormField(
+                        controller: _emailController,
+                        focusNode: _emailFocusNode,
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
+                        style: AppTextStyles.bodyLarge,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          hintText: 'user@example.com',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passwordController,
+                      focusNode: _passwordFocusNode,
+                      obscureText: _obscurePassword,
+                      autofillHints: const [AutofillHints.password],
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _handleSignIn(),
+                      style: AppTextStyles.bodyLarge,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        hintText: 'Enter your password',
+                        prefixIcon: const Icon(Icons.lock_outlined),
+                        suffixIcon: Semantics(
+                          label: _obscurePassword ? 'Show password' : 'Hide password',
+                          button: true,
+                          child: IconButton(
+                            tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                            icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    minimumSize: const Size(48, 48),
+                child: Semantics(
+                  button: true,
+                  label: 'Reset your password',
+                  child: TextButton(
+                    onPressed: _handleForgotPassword,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      minimumSize: const Size(48, 48),
+                    ),
+                    child: Text('Forgot Password?', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary)),
                   ),
-                  child: Text('Forgot Password?', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary)),
                 ),
               ),
               const SizedBox(height: 24),
@@ -251,22 +290,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   textStyle: AppTextStyles.bodyMedium,
                 ),
               ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Dont have an account? '),
-                    TextButton(
-                      onPressed: () => _goToCreateAccount(),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        minimumSize: const Size(48, 48),
+              Wrap(
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text('Dont have an account? ', style: AppTextStyles.bodyMedium),
+                  TextButton(
+                    onPressed: () => _goToCreateAccount(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      minimumSize: const Size(48, 48),
                     ),
                     child: Text('Create Account', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary)),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 8),
@@ -288,6 +325,160 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
+/// Offline "Forgot Password" dialog: verifies the email belongs to a saved
+/// account and sets a new password. Pops with the email string on success,
+/// or null if cancelled.
+class _ForgotPasswordDialog extends ConsumerStatefulWidget {
+  final String initialEmail;
+  const _ForgotPasswordDialog({required this.initialEmail});
+
+  @override
+  ConsumerState<_ForgotPasswordDialog> createState() =>
+      _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
+  late final TextEditingController _emailController;
+  final _newPasswordController = TextEditingController();
+  final _confirmController = TextEditingController();
+  bool _obscure = true;
+  bool _submitting = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _newPasswordController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_submitting) return;
+    if (_newPasswordController.text != _confirmController.text) {
+      setState(() => _error = 'Passwords do not match');
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+
+    final error = await ref.read(accountProvider.notifier).resetPassword(
+          _emailController.text,
+          _newPasswordController.text,
+        );
+
+    if (!mounted) return;
+    if (error != null) {
+      setState(() {
+        _submitting = false;
+        _error = error;
+      });
+      return;
+    }
+    Navigator.of(context).pop(_emailController.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Reset Password'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Enter your account email and a new password.',
+              style: AppTextStyles.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            Semantics(
+              label: 'Account email input',
+              child: TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                style: AppTextStyles.bodyLarge,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Semantics(
+              label: 'New password input',
+              child: TextField(
+                controller: _newPasswordController,
+                obscureText: _obscure,
+                style: AppTextStyles.bodyLarge,
+                decoration: InputDecoration(
+                  labelText: 'New password',
+                  prefixIcon: const Icon(Icons.lock_outlined),
+                  suffixIcon: Semantics(
+                    label: _obscure ? 'Show password' : 'Hide password',
+                    button: true,
+                    child: IconButton(
+                      tooltip: _obscure ? 'Show password' : 'Hide password',
+                      icon: Icon(_obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined),
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Semantics(
+              label: 'Confirm new password input',
+              child: TextField(
+                controller: _confirmController,
+                obscureText: _obscure,
+                style: AppTextStyles.bodyLarge,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm password',
+                  prefixIcon: Icon(Icons.lock_outlined),
+                ),
+              ),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  _error!,
+                  style: AppTextStyles.bodyMedium.copyWith(color: Colors.red),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _submitting ? null : _submit,
+          style: ElevatedButton.styleFrom(minimumSize: const Size(120, 48)),
+          child: Text(_submitting ? 'Resetting…' : 'Reset Password'),
+        ),
+      ],
+    );
+  }
+}
+
 class _BiometricButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -301,26 +492,30 @@ class _BiometricButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Sign in with $label',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          height: 96,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border, width: 1.5),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 36, color: AppColors.textPrimary),
-              const SizedBox(height: 8),
-              Text(label, style: AppTextStyles.labelLarge),
-            ],
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        label: 'Sign in with $label',
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          // WCAG 2.1 SC 2.4.7: visible focus indicator for keyboard users
+          focusColor: AppColors.primaryLight,
+          child: Container(
+            height: 96,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border, width: 1.5),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ExcludeSemantics(child: Icon(icon, size: 36, color: AppColors.textPrimary)),
+                const SizedBox(height: 8),
+                ExcludeSemantics(child: Text(label, style: AppTextStyles.labelLarge)),
+              ],
+            ),
           ),
         ),
       ),

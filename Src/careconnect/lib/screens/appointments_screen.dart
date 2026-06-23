@@ -122,7 +122,7 @@ class _AppointmentListTile extends StatelessWidget {
               Container(
                 width: 44, height: 44,
                 decoration: BoxDecoration(
-                  color: _borderColor.withOpacity(0.12),
+                  color: _borderColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.person_outlined, color: _borderColor, size: 22),
@@ -138,7 +138,7 @@ class _AppointmentListTile extends StatelessWidget {
                     Row(children: [
                       const Icon(Icons.calendar_today, size: 14, color: AppColors.textMuted),
                       const SizedBox(width: 4),
-                      Text('$dateStr  $timeStr', style: AppTextStyles.caption),
+                      Flexible(child: Text('$dateStr  $timeStr', style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)),
                     ]),
                     Row(children: [
                       const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textMuted),
@@ -171,7 +171,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color),
       ),
@@ -201,17 +201,23 @@ class _AppointmentDetailSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
+          // Decorative drag handle — no semantic value
+          ExcludeSemantics(
+            child: Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
           ),
           const SizedBox(height: 20),
-          Text(appointment.doctorName, style: AppTextStyles.headlineMedium),
+          Semantics(
+            header: true,
+            child: Text(appointment.doctorName, style: AppTextStyles.headlineMedium),
+          ),
           Text(appointment.specialty, style: AppTextStyles.bodyMedium),
           const SizedBox(height: 16),
           Row(children: [
@@ -233,28 +239,34 @@ class _AppointmentDetailSheet extends StatelessWidget {
           ],
           const SizedBox(height: 24),
           if (appointment.status == AppointmentStatus.upcoming) ...[
-            OutlinedButton.icon(
-              onPressed: () {
-                HapticFeedback.mediumImpact();
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.edit_calendar_outlined),
-              label: const Text('Reschedule'),
-              style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 52)),
+            Semantics(
+              label: 'Reschedule appointment with ${appointment.doctorName}',
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.edit_calendar_outlined),
+                label: const Text('Reschedule'),
+                style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 52)),
+              ),
             ),
             const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: () {
-                HapticFeedback.mediumImpact();
-                ref.read(appointmentsProvider.notifier).cancelAppointment(appointment.id);
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.cancel_outlined),
-              label: const Text('Cancel Appointment'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 52),
-                foregroundColor: Colors.red,
-                side: const BorderSide(color: Colors.red),
+            Semantics(
+              label: 'Cancel appointment with ${appointment.doctorName}',
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  ref.read(appointmentsProvider.notifier).cancelAppointment(appointment.id);
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('Cancel Appointment'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                ),
               ),
             ),
           ],

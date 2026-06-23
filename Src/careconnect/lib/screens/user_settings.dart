@@ -286,12 +286,16 @@ class _ToggleRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Semantics(
-          label: semanticsLabel,
-          button: true,
-          enabled: true,
-          toggled: value,
-          child: Switch(value: value, onChanged: onChanged),
+        // MergeSemantics folds the label onto the Switch's own tappable node so
+        // screen readers announce a single labeled, toggleable control
+        // (WCAG 4.1.2 Name, Role, Value).
+        MergeSemantics(
+          child: Semantics(
+            label: semanticsLabel,
+            enabled: true,
+            toggled: value,
+            child: Switch(value: value, onChanged: onChanged),
+          ),
         ),
       ],
     );

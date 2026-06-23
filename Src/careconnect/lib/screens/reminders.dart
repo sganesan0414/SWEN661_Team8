@@ -150,6 +150,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
         LabeledBackButton(
           label: 'Dashboard',
           onPressed: widget.onBack ?? () => Navigator.of(context).maybePop(),
+          foregroundColor: AppColors.primary,
         ),
         const SizedBox(height: 16),
         Row(
@@ -500,9 +501,12 @@ class _ReminderCard extends StatelessWidget {
                 const Icon(Icons.calendar_today_outlined,
                     size: 13, color: AppColors.textMuted),
                 const SizedBox(width: 5),
-                Text(
-                  daysLabel,
-                  style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+                Flexible(
+                  child: Text(
+                    daysLabel,
+                    style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -513,19 +517,27 @@ class _ReminderCard extends StatelessWidget {
             // Actions row: toggle, edit (optional), delete
             Row(
               children: [
-                Switch(
-                  value: isEnabled,
-                  onChanged: (_) => onToggle(),
-                  activeThumbColor: AppColors.primary,
-                  activeTrackColor: AppColors.primaryLight,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                MergeSemantics(
+                  child: Semantics(
+                    label: '$title reminder ${isEnabled ? "enabled" : "disabled"}',
+                    toggled: isEnabled,
+                    child: Switch(
+                      value: isEnabled,
+                      onChanged: (_) => onToggle(),
+                      activeThumbColor: AppColors.primary,
+                      activeTrackColor: AppColors.primaryLight,
+                      materialTapTargetSize: MaterialTapTargetSize.padded,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 4),
-                Text(
-                  isEnabled ? 'On' : 'Off',
-                  style: AppTextStyles.caption.copyWith(
-                    color: isEnabled ? AppColors.primary : AppColors.textMuted,
-                    fontWeight: FontWeight.w600,
+                ExcludeSemantics(
+                  child: Text(
+                    isEnabled ? 'On' : 'Off',
+                    style: AppTextStyles.caption.copyWith(
+                      color: isEnabled ? AppColors.primary : AppColors.textMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const Spacer(),
@@ -534,17 +546,17 @@ class _ReminderCard extends StatelessWidget {
                     icon: const Icon(Icons.edit_outlined,
                         size: 20, color: AppColors.textMuted),
                     onPressed: onEdit,
-                    tooltip: 'Edit reminder',
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.all(8),
+                    tooltip: 'Edit $title',
+                    padding: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline,
                       size: 20, color: Colors.redAccent),
                   onPressed: onDelete,
-                  tooltip: 'Delete reminder',
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.all(8),
+                  tooltip: 'Delete $title',
+                  padding: const EdgeInsets.all(12),
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 ),
               ],
             ),
@@ -582,10 +594,17 @@ class _SettingRowState extends State<_SettingRow> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(child: Text(widget.label, style: AppTextStyles.bodyMedium)),
-        Switch(
-          value: _value,
-          onChanged: (v) => setState(() => _value = v),
-          activeColor: AppColors.primary,
+        MergeSemantics(
+          child: Semantics(
+            label: '${widget.label} ${_value ? "enabled" : "disabled"}',
+            toggled: _value,
+            child: Switch(
+              value: _value,
+              onChanged: (v) => setState(() => _value = v),
+              activeThumbColor: AppColors.primary,
+              activeTrackColor: AppColors.primaryLight,
+            ),
+          ),
         ),
       ],
     );

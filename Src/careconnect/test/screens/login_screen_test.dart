@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:careconnect/screens/login_screen.dart';
-import 'package:careconnect/screens/create_account.dart';
 import 'package:careconnect/theme/app_theme.dart';
 
 Widget _wrap(Widget child) => ProviderScope(

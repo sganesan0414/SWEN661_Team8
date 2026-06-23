@@ -76,17 +76,20 @@ class _HealthMetricsScreenState extends ConsumerState<HealthMetricsScreen> {
 
                   Text('Add Reading', style: AppTextStyles.headlineMedium),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: _selectedMetricId,
-                    hint: Text('Select metric', style: AppTextStyles.bodyMedium),
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.monitor_heart_outlined),
+                  Semantics(
+                    label: 'Select metric for new reading',
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedMetricId,
+                      hint: Text('Select metric', style: AppTextStyles.bodyMedium),
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.monitor_heart_outlined),
+                      ),
+                      items: metrics.map((m) => DropdownMenuItem(
+                        value: m.id,
+                        child: Text(m.name),
+                      )).toList(),
+                      onChanged: (v) => setState(() => _selectedMetricId = v),
                     ),
-                    items: metrics.map((m) => DropdownMenuItem(
-                      value: m.id,
-                      child: Text(m.name),
-                    )).toList(),
-                    onChanged: (v) => setState(() => _selectedMetricId = v),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -169,7 +172,7 @@ class _VitalCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: _statusColor.withOpacity(0.12),
+                    color: _statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: _statusColor),
                   ),
@@ -203,20 +206,24 @@ class _Sparkline extends StatelessWidget {
     final maxV = values.reduce((a, b) => a > b ? a : b);
     final range = maxV - minV;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: last7.map((r) {
-        final normalized = range == 0 ? 0.5 : (r.value - minV) / range;
-        final height = 4.0 + normalized * 12;
-        return Container(
-          width: 6,
-          height: height,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.5 + normalized * 0.5),
-            borderRadius: BorderRadius.circular(3),
-          ),
-        );
-      }).toList(),
+    // Sparkline bars are decorative — the VitalCard Semantics label already
+    // describes the metric value and status for screen readers.
+    return ExcludeSemantics(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: last7.map((r) {
+          final normalized = range == 0 ? 0.5 : (r.value - minV) / range;
+          final height = 4.0 + normalized * 12;
+          return Container(
+            width: 6,
+            height: height,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.5 + normalized * 0.5),
+              borderRadius: BorderRadius.circular(3),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -236,7 +243,9 @@ class _ReadingRow extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
+      child: Semantics(
+        label: '${metric.name}: $valueStr ${metric.unit}, recorded on $dateStr',
+        child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -251,7 +260,8 @@ class _ReadingRow extends StatelessWidget {
             Text(dateStr, style: AppTextStyles.caption),
           ],
         ),
-      ),
-    );
+      ),    // closes Container
+      ),    // closes Semantics
+    );      // closes Padding
   }
 }

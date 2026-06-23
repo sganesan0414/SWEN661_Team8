@@ -102,9 +102,18 @@ class _HealthReportsScreenState extends ConsumerState<HealthReportsScreen> {
 
                   if (state.isGenerating) ...[
                     const SizedBox(height: 16),
-                    const Center(child: CircularProgressIndicator()),
-                    const SizedBox(height: 8),
-                    Center(child: Text('Generating report…', style: AppTextStyles.bodyMedium)),
+                    Semantics(
+                      liveRegion: true,
+                      label: 'Generating report, please wait',
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Center(child: CircularProgressIndicator()),
+                          const SizedBox(height: 8),
+                          Center(child: Text('Generating report…', style: AppTextStyles.bodyMedium)),
+                        ],
+                      ),
+                    ),
                   ],
 
                   const SizedBox(height: 24),
@@ -161,62 +170,75 @@ class _ReportCard extends StatelessWidget {
     final dt = report.generatedAt;
     final dateStr = '${dt.month}/${dt.day}/${dt.year}';
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(report.title, style: AppTextStyles.labelLarge)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _typeColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _typeColor),
+    return Semantics(
+      label: '${report.title}, $_typeBadge report, generated $dateStr',
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: Text(report.title, style: AppTextStyles.labelLarge)),
+                ExcludeSemantics(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _typeColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: _typeColor),
+                    ),
+                    child: Text(_typeBadge, style: AppTextStyles.caption.copyWith(color: _typeColor, fontWeight: FontWeight.w700)),
+                  ),
                 ),
-                child: Text(_typeBadge, style: AppTextStyles.caption.copyWith(color: _typeColor, fontWeight: FontWeight.w700)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text('Generated $dateStr', style: AppTextStyles.caption),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${report.title} downloaded')),
-                    );
-                  },
-                  icon: const Icon(Icons.download_outlined, size: 18),
-                  label: const Text('Download'),
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text('Generated $dateStr', style: AppTextStyles.caption),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    label: 'Download ${report.title}',
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${report.title} downloaded')),
+                        );
+                      },
+                      icon: const Icon(Icons.download_outlined, size: 18),
+                      label: const Text('Download'),
+                      style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: isShareCooling ? null : onShare,
-                  icon: isShareCooling
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Icon(Icons.share_outlined, size: 18),
-                  label: Text(isShareCooling ? 'Sharing…' : 'Share'),
-                  style: ElevatedButton.styleFrom(minimumSize: const Size(0, 44)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    label: isShareCooling ? 'Sharing ${report.title}' : 'Share ${report.title}',
+                    child: ElevatedButton.icon(
+                      onPressed: isShareCooling ? null : onShare,
+                      icon: isShareCooling
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Icon(Icons.share_outlined, size: 18),
+                      label: Text(isShareCooling ? 'Sharing…' : 'Share'),
+                      style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -72,13 +72,14 @@ class _CareTeamMemberCard extends StatelessWidget {
 
     return Semantics(
       label: '${member.name}, ${member.role}${member.isEmergencyContact ? ", Emergency Contact" : ""}',
+      explicitChildNodes: true,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: member.isEmergencyContact ? Colors.red.withOpacity(0.4) : AppColors.border,
+            color: member.isEmergencyContact ? Colors.red.withValues(alpha: 0.4) : AppColors.border,
             width: 1.5,
           ),
         ),
@@ -87,14 +88,16 @@ class _CareTeamMemberCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  width: 48, height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(initials, style: AppTextStyles.titleLarge.copyWith(color: AppColors.primary)),
+                ExcludeSemantics(
+                  child: Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(initials, style: AppTextStyles.titleLarge.copyWith(color: AppColors.primary)),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -106,14 +109,16 @@ class _CareTeamMemberCard extends StatelessWidget {
                         children: [
                           Expanded(child: Text(member.name, style: AppTextStyles.labelLarge)),
                           if (member.isEmergencyContact)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.red),
+                            ExcludeSemantics(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.red),
+                                ),
+                                child: Text('Emergency', style: AppTextStyles.caption.copyWith(color: Colors.red, fontWeight: FontWeight.w700)),
                               ),
-                              child: Text('Emergency', style: AppTextStyles.caption.copyWith(color: Colors.red, fontWeight: FontWeight.w700)),
                             ),
                         ],
                       ),
@@ -126,16 +131,27 @@ class _CareTeamMemberCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                _ContactChip(icon: Icons.phone_outlined, label: member.phone),
+                _ContactChip(
+                  icon: Icons.phone_outlined,
+                  label: member.phone,
+                  semanticLabel: 'Phone: ${member.phone}',
+                ),
                 const SizedBox(width: 10),
-                _ContactChip(icon: Icons.email_outlined, label: member.email),
+                _ContactChip(
+                  icon: Icons.email_outlined,
+                  label: member.email,
+                  semanticLabel: 'Email: ${member.email}',
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
-              child: const Text('Manage Access'),
+            Semantics(
+              label: 'Manage access for ${member.name}',
+              child: OutlinedButton(
+                onPressed: () {},
+                style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
+                child: const Text('Manage Access'),
+              ),
             ),
           ],
         ),
@@ -147,7 +163,13 @@ class _CareTeamMemberCard extends StatelessWidget {
 class _ContactChip extends StatelessWidget {
   final IconData icon;
   final String label;
-  const _ContactChip({required this.icon, required this.label});
+  final String semanticLabel;
+
+  const _ContactChip({
+    required this.icon,
+    required this.label,
+    required this.semanticLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -161,9 +183,16 @@ class _ContactChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: AppColors.textMuted),
+            ExcludeSemantics(child: Icon(icon, size: 14, color: AppColors.textMuted)),
             const SizedBox(width: 4),
-            Expanded(child: Text(label, style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)),
+            Expanded(
+              child: Text(
+                label,
+                semanticsLabel: semanticLabel,
+                style: AppTextStyles.caption,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),

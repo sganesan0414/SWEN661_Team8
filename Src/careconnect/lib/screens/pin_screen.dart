@@ -37,7 +37,7 @@ class _PinEntryScreenState extends ConsumerState<PinEntryScreen> {
 
   Future<void> _submit() async {
     if (_pin == _correctPin) {
-      await ref.read(accountProvider.notifier).signIn('pin-user', 'pin');
+      await ref.read(accountProvider.notifier).signInTrusted();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const DashboardScreen()),

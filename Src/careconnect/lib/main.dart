@@ -23,6 +23,19 @@ class MyApp extends StatelessWidget {
       title: 'CareConnect',
       theme: AppTheme.theme,
       home: const LoginScreen(),
+      // WCAG 2.1 SC 1.4.4: Resize text — support up to 200% without loss of content
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            textScaler: media.textScaler.clamp(
+              minScaleFactor: 1.0,
+              maxScaleFactor: 2.0,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

@@ -80,17 +80,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: IconButton(
               icon: const Icon(Icons.settings_outlined, color: Colors.white),
               onPressed: _openSettings,
-              tooltip: 'Settings',
+              tooltip: 'Open settings',
             ),
           ),
-          Semantics(
-            button: true,
-            label: 'Sign out',
-            child: TextButton.icon(
-              onPressed: _signOut,
-              icon: const Icon(Icons.logout_outlined, color: Colors.white, size: 20),
-              label: const Text('Sign out', style: TextStyle(color: Colors.white)),
-            ),
+          TextButton.icon(
+            onPressed: _signOut,
+            icon: const Icon(Icons.logout_outlined, color: Colors.white, size: 20),
+            label: const Text('Sign out', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -150,17 +146,25 @@ class _HomeTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    final dashState = context.findAncestorStateOfType<_DashboardScreenState>();
-                    dashState?._openProfile();
-                  },
-                  child: Semantics(
-                    button: true,
-                    label: 'Open profile for $displayName',
-                    child: Text(
-                      'Good Morning, $displayName',
-                      style: AppTextStyles.displayLarge.copyWith(color: Colors.white),
+                Semantics(
+                  button: true,
+                  label: 'Open profile for $displayName',
+                  child: InkWell(
+                    onTap: () {
+                      final dashState = context.findAncestorStateOfType<_DashboardScreenState>();
+                      dashState?._openProfile();
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    focusColor: Colors.white24,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Good Morning, $displayName',
+                          style: AppTextStyles.displayLarge.copyWith(color: Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -277,7 +281,7 @@ class _HomeTab extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Upcoming Medications', style: AppTextStyles.headlineMedium),
+              Flexible(child: Text('Upcoming Medications', style: AppTextStyles.headlineMedium)),
               TextButton(
                 onPressed: () {
                   final state = context.findAncestorStateOfType<_DashboardScreenState>();
@@ -559,6 +563,19 @@ class _UpcomingMedRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Semantics(
+      label: '$name, $dose, due at $time',
+      child: _UpcomingMedRowBody(name: name, dose: dose, time: time),
+    );
+  }
+}
+
+class _UpcomingMedRowBody extends StatelessWidget {
+  final String name, dose, time;
+  const _UpcomingMedRowBody({required this.name, required this.dose, required this.time});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -602,12 +619,25 @@ class _AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Upcoming appointment: $doctorName, $examType, on $date at $time',
+      child: _AppointmentCardBody(doctorName: doctorName, examType: examType, date: date, time: time),
+    );
+  }
+}
+
+class _AppointmentCardBody extends StatelessWidget {
+  final String doctorName, examType, date, time;
+  const _AppointmentCardBody({required this.doctorName, required this.examType, required this.date, required this.time});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.infoBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -651,26 +681,35 @@ class _MiniStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 30, height: 30,
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), shape: BoxShape.circle),
-            child: Icon(icon, color: Colors.white, size: 16),
-          ),
-          const SizedBox(height: 8),
-          Text(value, style: AppTextStyles.titleLarge.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 2),
-          Text(label, style: AppTextStyles.caption.copyWith(color: Colors.white70), maxLines: 2, overflow: TextOverflow.ellipsis),
-        ],
+    // label may contain '\n' — flatten for screen reader
+    final flatLabel = label.replaceAll('\n', ' ');
+    return Semantics(
+      label: '$flatLabel: $value',
+      child: Container(
+        width: width,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ExcludeSemantics(
+              child: Container(
+                width: 30, height: 30,
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.25), shape: BoxShape.circle),
+                child: Icon(icon, color: Colors.white, size: 16),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(value, style: AppTextStyles.titleLarge.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 2),
+            // Use Colors.white instead of Colors.white70: white70 on the semi-transparent
+            // blue container yields ~3.75:1, below the 4.5:1 WCAG AA threshold for 13sp text.
+            Text(label, style: AppTextStyles.caption.copyWith(color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis),
+          ],
+        ),
       ),
     );
   }

@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:careconnect/screens/create_account.dart';
 
 void main() {
+  setUp(() {
+    // Account registration persists via SharedPreferences; start each test with
+    // an empty, deterministic store so register() completes immediately.
+    SharedPreferences.setMockInitialValues({});
+  });
+
   group('CreateAccountScreen Widget Tests', () {
     // Test 1: Verify form validation 
     testWidgets('Cannot proceed without agreeing to Terms and Privacy Policy', (WidgetTester tester) async {
@@ -115,8 +122,12 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('Creating Account…'), findsOneWidget);
 
-      // Wait for the async operation to complete
-      await tester.pumpAndSettle();
+      // Drain register()'s delay, the route transition to LoginScreen, and the
+      // "Account created" SnackBar timer with bounded pumps (the success path
+      // ends on another screen, so pumpAndSettle would not converge cleanly).
+      await tester.pump(const Duration(seconds: 1));   // register completes + navigates
+      await tester.pump(const Duration(seconds: 3));   // SnackBar auto-dismisses
+      expect(find.text('Welcome Back'), findsOneWidget); // now on LoginScreen
     });
   });
 }
