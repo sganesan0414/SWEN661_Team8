@@ -4,8 +4,10 @@ import 'package:timezone/timezone.dart' as tz;
 import '../models/appointment.dart';
 
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
+  NotificationService({FlutterLocalNotificationsPlugin? plugin})
+      : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
+
+  final FlutterLocalNotificationsPlugin _plugin;
 
   Future<void> initialize() async {
     tz.initializeTimeZones();

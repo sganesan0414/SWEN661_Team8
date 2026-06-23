@@ -1,0 +1,15 @@
+appId: com.example.careconnect
+---
+- launchApp
+- assertVisible: "Welcome Back"
+- assertVisible: "Sign In"
+- assertVisible: "Fingerprint"
+- assertVisible: "Face ID"
+- tapOn:
+    id: ".*"
+    text: "Email"
+- inputText: "test@example.com"
+- tapOn: "Password"
+- inputText: "wrongpassword"
+- tapOn: "Sign In"
+- assertVisible: "Invalid email or password"

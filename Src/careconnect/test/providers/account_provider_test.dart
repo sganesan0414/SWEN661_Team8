@@ -168,6 +168,95 @@ void main() {
       expect(error, contains('at least 8'));
     });
 
+    test('register rejects an invalid email', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final error = await container.read(accountProvider.notifier).register(
+            name: 'Test User',
+            email: 'not-an-email',
+            phone: '555',
+            password: 'password123',
+          );
+      expect(error, contains('valid email'));
+    });
+
+    test('register rejects an empty name', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final error = await container.read(accountProvider.notifier).register(
+            name: '   ',
+            email: 'noname@example.com',
+            phone: '555',
+            password: 'password123',
+          );
+      expect(error, contains('enter your name'));
+    });
+
+    test('signInTrusted logs in as a guest when no accounts exist', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await container.read(accountProvider.notifier).signInTrusted();
+      final state = container.read(accountProvider);
+      expect(state.isLoggedIn, isTrue);
+      expect(state.email, isEmpty);
+      expect(state.displayName, 'there');
+    });
+
+    test('updateDisplayName updates state and the cached account', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(accountProvider.notifier);
+      await notifier.register(
+        name: 'Old Name',
+        email: 'rename@example.com',
+        phone: '555',
+        password: 'password123',
+      );
+      await notifier.signIn('rename@example.com', 'password123');
+
+      notifier.updateDisplayName('New Name');
+      expect(container.read(accountProvider).displayName, 'New Name');
+
+      notifier.signOut();
+      await notifier.signIn('rename@example.com', 'password123');
+      expect(container.read(accountProvider).displayName, 'New Name');
+    });
+
+    test('updateEmail updates state email', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(accountProvider.notifier);
+      await notifier.register(
+        name: 'Test',
+        email: 'first@example.com',
+        phone: '555',
+        password: 'password123',
+      );
+      await notifier.signIn('first@example.com', 'password123');
+      notifier.updateEmail('second@example.com');
+      expect(container.read(accountProvider).email, 'second@example.com');
+    });
+
+    test('updatePassword updates the cached password for sign-in', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(accountProvider.notifier);
+      await notifier.register(
+        name: 'Test',
+        email: 'pwchange@example.com',
+        phone: '555',
+        password: 'oldpassword1',
+      );
+      await notifier.signIn('pwchange@example.com', 'oldpassword1');
+      notifier.updatePassword('newpassword1');
+
+      notifier.signOut();
+      expect(
+        await notifier.signIn('pwchange@example.com', 'newpassword1'),
+        isNull,
+      );
+    });
+
     test('signOut clears state', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
