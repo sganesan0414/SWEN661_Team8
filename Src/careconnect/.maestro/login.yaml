@@ -1,0 +1,36 @@
+appId: com.example.careconnect
+---
+# Flow: Create Account -> Login -> Dashboard
+# Also used as a shared setup step (`runFlow: login.yaml`) by the other
+# flows in this directory, since every dashboard scenario needs to start
+# from a signed-in state.
+#
+# signIn() validates against accounts persisted via SharedPreferences
+# (lib/providers/account_provider.dart) -- there's no always-succeeds mock
+# account, so this flow registers one via the Create Account screen first.
+- launchApp
+- assertVisible: "Welcome Back"
+- tapOn: "Create Account"
+- assertVisible: "Create Your Account"
+- tapOn: "[\\s\\S]*Full name input[\\s\\S]*"
+- inputText: "Siva"
+- tapOn: "[\\s\\S]*Email address input[\\s\\S]*"
+- inputText: "siva@example.com"
+- tapOn: "[\\s\\S]*Phone number input[\\s\\S]*"
+- inputText: "555-123-4567"
+- tapOn:
+    text: "[\\s\\S]*Password input[\\s\\S]*"
+    index: 0
+- inputText: "password123"
+- tapOn: "[\\s\\S]*Confirm password input[\\s\\S]*"
+- inputText: "password123"
+- tapOn: "Agreement checkbox"
+- tapOn: "Continue"
+- assertVisible: "Welcome Back"
+- tapOn: "[\\s\\S]*Email[\\s\\S]*"
+- inputText: "siva@example.com"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Sign In"
+- assertVisible: "CareConnect"
+- assertVisible: "Good Morning, Siva"

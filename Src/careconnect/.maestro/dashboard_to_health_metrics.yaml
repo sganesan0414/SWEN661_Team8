@@ -1,0 +1,12 @@
+appId: com.example.careconnect
+---
+# Flow: Dashboard -> Health Metrics -> back
+- runFlow: login.yaml
+- scrollUntilVisible:
+    element:
+      text: "Health\\s*Metrics"
+    direction: DOWN
+- tapOn: "Health\\s*Metrics"
+- assertVisible: "Health Metrics"
+- back
+- assertVisible: "CareConnect"

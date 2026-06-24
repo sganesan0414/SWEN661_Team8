@@ -1,0 +1,12 @@
+appId: com.example.careconnect
+---
+# Flow: Dashboard -> Pharmacy (Quick Action tile) -> back
+- runFlow: login.yaml
+- scrollUntilVisible:
+    element:
+      text: "Pharmacy"
+    direction: DOWN
+- tapOn: "Pharmacy"
+- assertVisible: "My Pharmacies"
+- back
+- assertVisible: "CareConnect"

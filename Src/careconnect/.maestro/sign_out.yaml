@@ -1,0 +1,6 @@
+appId: com.example.careconnect
+---
+# Flow: Dashboard -> Sign out -> Login
+- runFlow: login.yaml
+- tapOn: "Sign out"
+- assertVisible: "Welcome Back"

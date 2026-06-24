@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:careconnect/main.dart';
 import 'package:careconnect/providers/appointments_provider.dart';
 import 'mocks.dart';
@@ -12,6 +13,13 @@ import 'mocks.dart';
 // across every bottom-nav tab, and back to LoginScreen on sign out.
 void main() {
   setUpAll(registerFallbacks);
+
+  setUp(() {
+    // signIn() now validates against accounts persisted via SharedPreferences
+    // (account_provider.dart), so each test registers its own account first
+    // instead of relying on an always-succeeds mock.
+    SharedPreferences.setMockInitialValues({});
+  });
 
   Widget appUnderTest() {
     final mockNotif = MockNotificationService();
@@ -29,7 +37,29 @@ void main() {
     // Starts on LoginScreen.
     expect(find.text('Welcome Back'), findsOneWidget);
 
-    // Sign in (mock signIn() always succeeds after a 1.5s delay).
+    // Register an account first: signIn() validates against accounts
+    // persisted via SharedPreferences, so there's nothing to sign into yet.
+    final createAccountLink = find.text('Create Account');
+    await tester.ensureVisible(createAccountLink);
+    await tester.tap(createAccountLink);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'Siva');
+    await tester.enterText(find.byType(TextFormField).at(1), 'siva@example.com');
+    await tester.enterText(find.byType(TextFormField).at(2), '555-123-4567');
+    await tester.enterText(find.byType(TextFormField).at(3), 'password123');
+    await tester.enterText(find.byType(TextFormField).at(4), 'password123');
+    final agreeCheckbox = find.byType(Checkbox);
+    await tester.ensureVisible(agreeCheckbox);
+    await tester.tap(agreeCheckbox);
+    final continueButton = find.widgetWithText(ElevatedButton, 'Continue');
+    await tester.ensureVisible(continueButton);
+    await tester.tap(continueButton);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1)); // register() completes + navigates
+    await tester.pump(const Duration(seconds: 3)); // "Account created" SnackBar dismisses
+    expect(find.text('Welcome Back'), findsOneWidget); // back on LoginScreen
+
+    // Sign in with the account just registered.
     await tester.enterText(find.byType(TextFormField).first, 'siva@example.com');
     await tester.enterText(find.byType(TextFormField).last, 'password123');
     final signInButton = find.widgetWithText(ElevatedButton, 'Sign In');
@@ -64,7 +94,7 @@ void main() {
     expect(find.text('CareConnect'), findsOneWidget);
 
     // Dashboard -> Settings (accessibility preferences), then navigate back.
-    await tester.tap(find.byTooltip('Settings'));
+    await tester.tap(find.byTooltip('Open settings'));
     await tester.pumpAndSettle();
     expect(find.text('Settings'), findsWidgets);
     expect(find.text('Manage your accessibility preferences'), findsOneWidget);

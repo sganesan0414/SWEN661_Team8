@@ -1,0 +1,35 @@
+appId: com.example.careconnect
+---
+# Flow: Dashboard bottom-nav tab walk (Home -> Medications -> Appointments
+# -> Reminders -> Care Team -> Home)
+#
+# CAVEAT: the bottom-nav label and the AppBar title render the same text
+# for the Appointments / Reminders / Care Team tabs (see
+# test/app_flow_test.dart, which hits the same ambiguity and works around
+# it by asserting on the ContextBar breadcrumb instead). `index: 1` below
+# assumes the bottom-nav item is the second matching node in traversal
+# order (the AppBar title is declared first in dashboard_screen.dart's
+# widget tree). Verify this with `maestro studio` if it drifts on your
+# build/device, or add an explicit `Key` to CareConnectBottomNav's items
+# in lib/components/widgets.dart for a stable selector.
+- runFlow: login.yaml
+- tapOn:
+    text: "Medications"
+    index: 1
+- assertVisible: "Home › My Medications"
+- tapOn:
+    text: "Appointments"
+    index: 1
+- assertVisible: "Home › Appointments"
+- tapOn:
+    text: "Reminders"
+    index: 1
+- assertVisible: "Home › Reminders"
+- tapOn:
+    text: "Care Team"
+    index: 1
+- assertVisible: "Home › Care Team"
+- tapOn:
+    text: "Home"
+    index: 1
+- assertVisible: "Home - Daily Overview"

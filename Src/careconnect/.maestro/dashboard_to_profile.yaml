@@ -1,0 +1,11 @@
+appId: com.example.careconnect
+---
+# Flow: Dashboard -> Profile -> back
+# Targets the Semantics label on the greeting ("Open profile for Siva")
+# rather than the visible "Good Morning, Siva" text, since the label is
+# unique and avoids relying on the mock account's display name formatting.
+- runFlow: login.yaml
+- tapOn: "Open profile for Siva"
+- assertVisible: "Profile"
+- back
+- assertVisible: "CareConnect"

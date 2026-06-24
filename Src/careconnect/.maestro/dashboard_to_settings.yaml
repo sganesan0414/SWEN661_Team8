@@ -1,0 +1,9 @@
+appId: com.example.careconnect
+---
+# Flow: Dashboard -> Settings (Accessibility Preferences) -> back
+- runFlow: login.yaml
+- tapOn: "Open settings"
+- assertVisible: "Settings"
+- assertVisible: "Manage your accessibility preferences"
+- back
+- assertVisible: "CareConnect"
