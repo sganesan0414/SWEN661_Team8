@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_theme.dart';
 import '../components/widgets.dart';
 import '../providers/account_provider.dart';
@@ -18,6 +19,9 @@ class PinEntryScreen extends ConsumerStatefulWidget {
 class _PinEntryScreenState extends ConsumerState<PinEntryScreen> {
   String _pin = '';
   bool _hasError = false;
+  /// Incremented on each failed attempt so the shake replays even when two
+  /// wrong PINs in a row leave `_hasError` unchanged.
+  int _errorCount = 0;
 
   void _onDigit(String digit) {
     if (_pin.length >= 4) return;
@@ -46,13 +50,13 @@ class _PinEntryScreenState extends ConsumerState<PinEntryScreen> {
       HapticFeedback.heavyImpact();
       setState(() {
         _hasError = true;
+        _errorCount++;
         _pin = '';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Incorrect PIN. Please try again.'),
-          duration: Duration(seconds: 2),
-        ),
+      showAppSnackBar(
+        context,
+        'Incorrect PIN. Please try again.',
+        duration: const Duration(seconds: 2),
       );
     }
   }
@@ -63,7 +67,7 @@ class _PinEntryScreenState extends ConsumerState<PinEntryScreen> {
       backgroundColor: AppColors.surface,
       appBar: AppBar(
         leading: LabeledBackButton(label: 'Login'),
-        leadingWidth: 160,
+        leadingWidth: AppSizing.backButtonWidth,
         title: const Text('Enter PIN'),
         elevation: 0,
       ),
@@ -77,30 +81,51 @@ class _PinEntryScreenState extends ConsumerState<PinEntryScreen> {
               const SizedBox(height: 16),
               Text('Enter your 4-digit PIN', style: AppTextStyles.titleLarge),
               const SizedBox(height: 8),
-              if (_hasError)
-                Text('Incorrect PIN', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.warning))
-              else
-                const SizedBox(height: 20),
+              SizedBox(
+                height: 24,
+                child: Semantics(
+                  liveRegion: true,
+                  child: AnimatedOpacity(
+                    opacity: _hasError ? 1 : 0,
+                    duration: context.motion(AppDurations.fast),
+                    child: Text(
+                      'Incorrect PIN',
+                      style: AppTextStyles.bodyMedium
+                          .copyWith(color: AppColors.danger),
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 32),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(4, (i) {
-                  final filled = i < _pin.length;
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: filled ? AppColors.primary : Colors.transparent,
-                      border: Border.all(
-                        color: _hasError ? AppColors.warning : AppColors.primary,
-                        width: 2,
+              // The shake is a redundant cue: the colour change and the
+              // "Incorrect PIN" text carry the same meaning for anyone with
+              // reduced motion enabled.
+              ShakeOnChange(
+                trigger: _errorCount,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(4, (i) {
+                    final filled = i < _pin.length;
+                    return AnimatedContainer(
+                      duration: context.motion(AppDurations.fast),
+                      curve: AppCurves.standard,
+                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: filled
+                            ? (_hasError ? AppColors.danger : AppColors.primary)
+                            : Colors.transparent,
+                        border: Border.all(
+                          color: _hasError ? AppColors.danger : AppColors.primary,
+                          width: 2,
+                        ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
               const SizedBox(height: 48),
 

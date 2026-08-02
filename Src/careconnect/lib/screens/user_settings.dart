@@ -31,32 +31,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           label: 'Home',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        leadingWidth: 160,
+        leadingWidth: AppSizing.backButtonWidth,
         title: const Text('Settings'),
         elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: AppSpacing.screen,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Settings', style: AppTextStyles.displayLarge),
-              const SizedBox(height: 8),
-              Text(
-                'Manage your accessibility preferences',
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+              Semantics(
+                header: true,
+                child: Text(
+                  'Manage your accessibility preferences',
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.textSecondary),
+                ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xxl),
 
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.large),
                   border: Border.all(color: AppColors.border, width: 1),
                 ),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -230,11 +232,11 @@ class _SettingsCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(color: AppColors.border, width: 1),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

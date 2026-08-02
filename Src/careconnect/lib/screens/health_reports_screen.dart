@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_theme.dart';
 import '../components/widgets.dart';
 import '../models/health_report.dart';
 import '../providers/health_reports_provider.dart';
+import '../utils/formatting.dart';
 
 class HealthReportsScreen extends ConsumerStatefulWidget {
   const HealthReportsScreen({super.key});
@@ -36,6 +38,7 @@ class _HealthReportsScreenState extends ConsumerState<HealthReportsScreen> {
         ? 'None'
         : '${reports.first.generatedAt.month}/${reports.first.generatedAt.day}';
 
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -44,14 +47,14 @@ class _HealthReportsScreenState extends ConsumerState<HealthReportsScreen> {
           label: 'Home',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        leadingWidth: 160,
+        leadingWidth: AppSizing.backButtonWidth,
       ),
       body: Column(
         children: [
           const ContextBar(screenLabel: 'Home › Health Reports'),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: AppSpacing.screen,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -69,7 +72,7 @@ class _HealthReportsScreenState extends ConsumerState<HealthReportsScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  Text('Generate New Report', style: AppTextStyles.headlineMedium),
+                  const SectionHeader(title: 'Generate New Report'),
                   const SizedBox(height: 12),
                   GridView.count(
                     crossAxisCount: 3,
@@ -87,46 +90,60 @@ class _HealthReportsScreenState extends ConsumerState<HealthReportsScreen> {
                       ),
                       QuickActionTile(
                         icon: Icons.bar_chart_outlined,
-                        iconColor: const Color(0xFF7B3FA0),
+                        iconColor: AppColors.appointment,
                         label: 'Quarterly',
                         onTap: () => ref.read(healthReportsProvider.notifier).generateReport(ReportType.quarterly),
                       ),
                       QuickActionTile(
                         icon: Icons.tune_outlined,
-                        iconColor: const Color(0xFFB85C00),
+                        iconColor: AppColors.warning,
                         label: 'Custom',
                         onTap: () => ref.read(healthReportsProvider.notifier).generateReport(ReportType.custom),
                       ),
                     ],
                   ),
 
-                  if (state.isGenerating) ...[
-                    const SizedBox(height: 16),
-                    Semantics(
-                      liveRegion: true,
-                      label: 'Generating report, please wait',
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Center(child: CircularProgressIndicator()),
-                          const SizedBox(height: 8),
-                          Center(child: Text('Generating report…', style: AppTextStyles.bodyMedium)),
-                        ],
-                      ),
-                    ),
-                  ],
+                  AnimatedSize(
+                    duration: context.motion(AppDurations.normal),
+                    curve: AppCurves.standard,
+                    alignment: Alignment.topCenter,
+                    child: state.isGenerating
+                        ? Semantics(
+                            liveRegion: true,
+                            label: 'Generating report, please wait',
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: AppSpacing.lg),
+                                const Center(child: CircularProgressIndicator()),
+                                const SizedBox(height: AppSpacing.sm),
+                                Center(child: Text('Generating report…', style: AppTextStyles.bodyMedium)),
+                              ],
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
 
                   const SizedBox(height: 24),
-                  Text('Your Reports', style: AppTextStyles.headlineMedium),
+                  const SectionHeader(title: 'Your Reports'),
                   const SizedBox(height: 12),
-                  ...reports.map((r) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _ReportCard(
-                          report: r,
-                          isShareCooling: _shareCooling[r.id] == true,
-                          onShare: () => _share(r.id),
-                        ),
-                      )),
+                  if (reports.isEmpty)
+                    const EmptyState(
+                      icon: Icons.description_outlined,
+                      message: 'No reports yet. Generate one above.',
+                    )
+                  else
+                    ...reports.asMap().entries.map((entry) => EntranceSlide(
+                          index: entry.key,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                            child: _ReportCard(
+                              report: entry.value,
+                              isShareCooling: _shareCooling[entry.value.id] == true,
+                              onShare: () => _share(entry.value.id),
+                            ),
+                          ),
+                        )),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -160,15 +177,15 @@ class _ReportCard extends StatelessWidget {
   Color get _typeColor {
     return switch (report.type) {
       ReportType.monthly   => AppColors.primary,
-      ReportType.quarterly => const Color(0xFF7B3FA0),
-      ReportType.custom    => const Color(0xFFB85C00),
+      ReportType.quarterly => AppColors.appointment,
+      ReportType.custom    => AppColors.warning,
     };
   }
 
   @override
   Widget build(BuildContext context) {
     final dt = report.generatedAt;
-    final dateStr = '${dt.month}/${dt.day}/${dt.year}';
+    final dateStr = formatNumericDate(dt);
 
     return Semantics(
       label: '${report.title}, $_typeBadge report, generated $dateStr',
@@ -210,9 +227,7 @@ class _ReportCard extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () {
                         HapticFeedback.lightImpact();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${report.title} downloaded')),
-                        );
+                        showAppSnackBar(context, '${report.title} downloaded');
                       },
                       icon: const Icon(Icons.download_outlined, size: 18),
                       label: const Text('Download'),

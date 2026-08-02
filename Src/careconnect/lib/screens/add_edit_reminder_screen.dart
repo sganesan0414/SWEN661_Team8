@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/reminder.dart';
 import '../providers/reminders_provider.dart';
+import '../components/widgets.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_theme.dart';
+import '../utils/formatting.dart';
 
 class AddEditReminderScreen extends ConsumerStatefulWidget {
   final Reminder? reminder;
@@ -61,9 +64,7 @@ class _AddEditReminderScreenState extends ConsumerState<AddEditReminderScreen> {
 
   void _save() {
     if (_titleCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title')),
-      );
+      showAppSnackBar(context, 'Please enter a title');
       return;
     }
     final notifier = ref.read(remindersProvider.notifier);
@@ -98,12 +99,7 @@ class _AddEditReminderScreenState extends ConsumerState<AddEditReminderScreen> {
   @override
   Widget build(BuildContext context) {
     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final h = _time.hour > 12
-        ? _time.hour - 12
-        : (_time.hour == 0 ? 12 : _time.hour);
-    final m = _time.minute.toString().padLeft(2, '0');
-    final period = _time.hour >= 12 ? 'PM' : 'AM';
-    final timeStr = '$h:$m $period';
+    final timeStr = formatHourMinute(_time.hour, _time.minute);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -224,7 +220,9 @@ class _AddEditReminderScreenState extends ConsumerState<AddEditReminderScreen> {
               children: List.generate(7, (i) {
                 return GestureDetector(
                   onTap: () => setState(() => _days[i] = !_days[i]),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: context.motion(AppDurations.fast),
+                    curve: AppCurves.standard,
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
@@ -282,12 +280,14 @@ class _TypeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
+      child: AnimatedContainer(
+        duration: context.motion(AppDurations.fast),
+        curve: AppCurves.standard,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
         decoration: BoxDecoration(
           color: selected ? AppColors.primary : AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(
             color: selected ? AppColors.primary : AppColors.border,
             width: selected ? 2 : 1.5,
@@ -329,11 +329,13 @@ class _QuickDayButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: context.motion(AppDurations.fast),
+        curve: AppCurves.standard,
         height: 40,
         decoration: BoxDecoration(
           color: selected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(color: AppColors.primary),
         ),
         child: Center(

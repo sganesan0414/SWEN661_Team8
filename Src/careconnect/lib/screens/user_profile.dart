@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../theme/app_theme.dart';
+import '../components/widgets.dart';
 import '../providers/account_provider.dart';
+import '../utils/formatting.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key});
@@ -43,15 +45,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       if (pickedFile != null) {
         setState(() => _profileImage = File(pickedFile.path));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No image selected')),
-        );
+        showAppSnackBar(context, 'No image selected');
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+      showAppSnackBar(context, 'Error picking image: $e');
     }
   }
 
@@ -62,9 +60,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     ref.read(accountProvider.notifier).updateDisplayName(_fullNameController.text.trim());
     ref.read(accountProvider.notifier).updateEmail(_emailController.text.trim());
     setState(() => _isLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile updated successfully'), duration: Duration(seconds: 2)),
-    );
+    showAppSnackBar(context, 'Profile updated successfully', duration: const Duration(seconds: 2));
   }
 
   void _cancelChanges() {
@@ -153,22 +149,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 ElevatedButton(
                   onPressed: () {
                     if (newPasswordController.text != confirmPasswordController.text) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Passwords do not match')),
-                      );
+                      showAppSnackBar(context, 'Passwords do not match');
                       return;
                     }
                     if (newPasswordController.text.length < 8) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Password must be at least 8 characters')),
-                      );
+                      showAppSnackBar(context, 'Password must be at least 8 characters');
                       return;
                     }
                     ref.read(accountProvider.notifier).updatePassword(newPasswordController.text);
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password changed successfully')),
-                    );
+                    showAppSnackBar(context, 'Password changed successfully');
                   },
                   child: const Text('Change Password'),
                 ),
@@ -193,13 +183,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final account = ref.watch(accountProvider);
-    final initials = account.displayName.isNotEmpty
-        ? account.displayName.trim().split(' ').map((w) => w[0]).take(2).join().toUpperCase()
-        : '?';
+    final initials = initialsOf(account.displayName);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
+        leading: LabeledBackButton(
+          label: 'Home',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        leadingWidth: AppSizing.backButtonWidth,
         title: const Text('Profile'),
         elevation: 0,
       ),
@@ -209,13 +202,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Profile', style: AppTextStyles.displayLarge),
-              const SizedBox(height: 8),
-              Text(
-                'Manage your account information',
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+              Semantics(
+                header: true,
+                child: Text(
+                  'Manage your account information',
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.textSecondary),
+                ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xxl),
 
               Card(
                 elevation: 0,
@@ -293,10 +288,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _fullNameController,
-                        onChanged: (_) {},
                         decoration: InputDecoration(
                           hintText: 'Enter full name',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -305,11 +299,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _emailController,
-                        onChanged: (_) {},
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           hintText: 'Enter email',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -318,11 +311,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _phoneController,
-                        onChanged: (_) {},
                         keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
                           hintText: 'Enter phone',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -331,10 +323,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _roleController,
-                        onChanged: (_) {},
                         decoration: InputDecoration(
                           hintText: 'Enter role',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -343,11 +334,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _careNotesController,
-                        onChanged: (_) {},
                         maxLines: 3,
                         decoration: InputDecoration(
                           hintText: 'Enter care notes',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
                         ),
                       ),
                       const SizedBox(height: 24),

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_theme.dart';
 import '../components/widgets.dart';
 import '../models/reminder.dart';
 import '../providers/medications_provider.dart';
 import '../providers/appointments_provider.dart';
 import '../providers/reminders_provider.dart';
+import '../utils/formatting.dart';
 import 'add_edit_reminder_screen.dart';
 
 class RemindersScreen extends ConsumerStatefulWidget {
@@ -37,7 +39,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
             child: const Text('Delete'),
           ),
         ],
@@ -196,7 +198,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                       : Icons.event_outlined,
                   iconColor: r.type == ReminderType.medication
                       ? AppColors.primary
-                      : const Color(0xFF7B3FA0),
+                      : AppColors.appointment,
                   title: r.title,
                   subtitle: r.subtitle,
                   timeLabel: r.formattedTime,
@@ -260,19 +262,14 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
           const SizedBox(height: 12),
           ...visibleAppts.map((appt) {
             final disabled = _disabledApptIds.contains(appt.id);
-            final h = appt.dateTime.hour > 12
-                ? appt.dateTime.hour - 12
-                : (appt.dateTime.hour == 0 ? 12 : appt.dateTime.hour);
-            final m = appt.dateTime.minute.toString().padLeft(2, '0');
-            final period = appt.dateTime.hour >= 12 ? 'PM' : 'AM';
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: _ReminderCard(
                 icon: Icons.event_outlined,
-                iconColor: const Color(0xFF7B3FA0),
+                iconColor: AppColors.appointment,
                 title: appt.doctorName,
                 subtitle: appt.specialty,
-                timeLabel: '$h:$m $period',
+                timeLabel: formatTime(appt.dateTime),
                 daysLabel: _apptDateLabel(appt.dateTime),
                 isEnabled: !disabled,
                 onToggle: () => setState(() {
@@ -366,7 +363,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => showComingSoon(context, 'Testing all reminders'),
                   icon: const Icon(Icons.notifications_active_outlined),
                   label: const Text('Test All Reminders'),
                   style: OutlinedButton.styleFrom(
@@ -379,7 +376,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => showComingSoon(context, 'Snoozing all reminders'),
                   icon: const Icon(Icons.snooze_outlined),
                   label: const Text('Snooze All (1 hour)'),
                   style: OutlinedButton.styleFrom(
@@ -395,13 +392,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
     );
   }
 
-  String _apptDateLabel(DateTime dt) {
-    const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return 'One-time · ${months[dt.month]} ${dt.day}, ${dt.year}';
-  }
+  String _apptDateLabel(DateTime dt) => 'One-time · ${formatShortDate(dt)}';
 }
 
 // ── Reminder card ────────────────────────────────────────────────────────────
@@ -433,15 +424,21 @@ class _ReminderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
+    return AnimatedOpacity(
       opacity: isEnabled ? 1.0 : 0.55,
-      child: Container(
-        padding: const EdgeInsets.all(16),
+      duration: context.motion(AppDurations.normal),
+      curve: AppCurves.standard,
+      child: AnimatedContainer(
+        duration: context.motion(AppDurations.normal),
+        curve: AppCurves.standard,
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          color: isEnabled ? AppColors.surface : AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          // Both arms of this ternary were AppColors.border, so the disabled
+          // state was indistinguishable from the enabled one by border alone.
           border: Border.all(
-            color: isEnabled ? AppColors.border : AppColors.border,
+            color: isEnabled ? AppColors.border : AppColors.textMuted,
           ),
         ),
         child: Column(
@@ -552,7 +549,7 @@ class _ReminderCard extends StatelessWidget {
                   ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline,
-                      size: 20, color: Colors.redAccent),
+                      size: 20, color: AppColors.danger),
                   onPressed: onDelete,
                   tooltip: 'Delete $title',
                   padding: const EdgeInsets.all(12),

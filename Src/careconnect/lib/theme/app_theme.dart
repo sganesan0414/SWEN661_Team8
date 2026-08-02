@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_motion.dart';
+
 class AppColors {
   // Primary
   static const Color primary = Color(0xFF1A3FB0);       // Deep blue - high contrast
@@ -29,6 +31,60 @@ class AppColors {
   // Alerts / Notifications
   static const Color alertBg = Color(0xFFFFF8E1);
   static const Color alertBorder = Color(0xFFE6A817);
+
+  // Destructive actions (cancel, delete, emergency). Darker than Colors.red so
+  // it clears 4.5:1 on white for the small text it labels.
+  static const Color danger = Color(0xFFC62828);
+  static const Color dangerBg = Color(0xFFFDECEA);
+
+  // Accent used for appointment-flavoured surfaces across screens.
+  static const Color appointment = Color(0xFF7B3FA0);
+}
+
+/// Corner radii. Cards and sheets share one scale so surfaces at the same
+/// altitude read as the same kind of object.
+class AppRadius {
+  /// Chips, badges, small inline containers.
+  static const double small = 8;
+
+  /// Buttons, inputs, inner containers.
+  static const double medium = 12;
+
+  /// Cards and list items — the app's default surface.
+  static const double large = 16;
+
+  /// Hero panels and bottom sheets.
+  static const double xLarge = 20;
+
+  /// Fully rounded pills.
+  static const double pill = 999;
+}
+
+/// Vertical/horizontal rhythm on a 4pt grid.
+class AppSpacing {
+  static const double xs = 4;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double lg = 16;
+  static const double xl = 20;
+  static const double xxl = 24;
+  static const double section = 32;
+
+  /// Standard screen edge padding.
+  static const EdgeInsets screen = EdgeInsets.all(xl);
+}
+
+/// Sizing constants shared across screens.
+class AppSizing {
+  /// Minimum interactive target (WCAG 2.1 SC 2.5.5).
+  static const double minTouchTarget = 48;
+
+  /// Primary action button height.
+  static const double buttonHeight = 56;
+
+  /// Width reserved in an AppBar for [LabeledBackButton]'s "Return to X" label.
+  /// Shared so every screen's back affordance lines up and none of them clip.
+  static const double backButtonWidth = 170;
 }
 
 class AppTextStyles {
@@ -74,13 +130,25 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         brightness: Brightness.light,
-        background: AppColors.background,
         surface: AppColors.surface,
         primary: AppColors.primary,
         onPrimary: AppColors.textOnPrimary,
+        error: AppColors.danger,
       ),
       scaffoldBackgroundColor: AppColors.background,
       fontFamily: 'Roboto',
+      // One navigation transition on every platform, so a push feels the same
+      // wherever the app runs.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: AppPageTransitionsBuilder(),
+          TargetPlatform.iOS: AppPageTransitionsBuilder(),
+          TargetPlatform.macOS: AppPageTransitionsBuilder(),
+          TargetPlatform.windows: AppPageTransitionsBuilder(),
+          TargetPlatform.linux: AppPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: AppPageTransitionsBuilder(),
+        },
+      ),
       // Touch targets: >= 48dp 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -140,6 +208,57 @@ class AppTheme {
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.border, thickness: 1, space: 0,
+      ),
+      // Every snackbar in the app was styled at its call site, so some floated
+      // with rounded corners and most were square and edge-to-edge. Setting it
+      // once here makes them uniform.
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.textPrimary,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textOnPrimary,
+        ),
+        actionTextColor: const Color(0xFF9FC0FF),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+        ),
+        insetPadding: const EdgeInsets.all(AppSpacing.lg),
+        elevation: 4,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xLarge),
+        ),
+        titleTextStyle: AppTextStyles.headlineMedium,
+        contentTextStyle: AppTextStyles.bodyMedium,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xLarge),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          textStyle: AppTextStyles.labelMedium,
+          minimumSize: const Size(AppSizing.minTouchTarget, AppSizing.minTouchTarget),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : null,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.primaryLight
+              : null,
+        ),
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../components/widgets.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_theme.dart';
 import '../providers/account_provider.dart';
 import 'login_screen.dart';
@@ -23,7 +25,10 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
   bool _isLoading = false;
-  final int _currentStep = 0; // 0 for account info, 1 for health info, 2 for verification
+  // Account creation is a single screen today; the indicator shows where that
+  // sits in the wider flow rather than tracking sub-steps within this screen.
+  static const int _totalSteps = 3;
+  final int _currentStep = 0;
 
   void _goToLogin() {
     if (!mounted) return;
@@ -34,32 +39,17 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
 
   Future<void> _handleContinue() async {
     if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to Terms of Service and Privacy Policy'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      showAppSnackBar(context, 'Please agree to Terms of Service and Privacy Policy', duration: const Duration(seconds: 2));
       return;
     }
 
     if (_passwordController.text.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password must be at least 8 characters'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      showAppSnackBar(context, 'Password must be at least 8 characters', duration: const Duration(seconds: 2));
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Passwords do not match'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      showAppSnackBar(context, 'Passwords do not match', duration: const Duration(seconds: 2));
       return;
     }
 
@@ -78,18 +68,11 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     setState(() { _isLoading = false; });
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), duration: const Duration(seconds: 2)),
-      );
+      showAppSnackBar(context, error, duration: const Duration(seconds: 2));
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Account created! Please sign in.'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    showAppSnackBar(context, 'Account created! Please sign in.', duration: const Duration(seconds: 2));
     _goToLogin();
   }
 
@@ -136,16 +119,18 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
               const SizedBox(height: 32),
 
               // Progress Indicator (3 steps)
-              Row(
-                children: [
-                  _ProgressStep(isActive: _currentStep >= 0),
-                  const SizedBox(width: 8),
-                  _ProgressStep(isActive: _currentStep >= 1),
-                  const SizedBox(width: 8),
-                  _ProgressStep(isActive: _currentStep >= 2),
-                ],
+              Semantics(
+                label: 'Step ${_currentStep + 1} of $_totalSteps',
+                child: Row(
+                  children: [
+                    for (var i = 0; i < _totalSteps; i++) ...[
+                      if (i > 0) const SizedBox(width: AppSpacing.sm),
+                      _ProgressStep(isActive: _currentStep >= i),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.section),
 
               // Full Name
               Semantics(
@@ -360,7 +345,9 @@ class _ProgressStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
+      child: AnimatedContainer(
+        duration: context.motion(AppDurations.normal),
+        curve: AppCurves.standard,
         height: 6,
         decoration: BoxDecoration(
           color: isActive ? AppColors.primary : AppColors.border,

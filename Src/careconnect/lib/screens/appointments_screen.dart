@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_theme.dart';
 import '../components/widgets.dart';
 import '../models/appointment.dart';
 import '../providers/appointments_provider.dart';
+import '../utils/formatting.dart';
 
 class AppointmentsScreen extends ConsumerWidget {
   const AppointmentsScreen({super.key});
@@ -22,7 +24,7 @@ class AppointmentsScreen extends ConsumerWidget {
         a.dateTime.isAfter(now)).toList();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: AppSpacing.screen,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -49,15 +51,24 @@ class AppointmentsScreen extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 20),
-          Text('Your Appointments', style: AppTextStyles.headlineMedium),
-          const SizedBox(height: 12),
-          ...appointments.map((appt) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _AppointmentListTile(
-                  appointment: appt,
-                  onTap: () => _showDetailSheet(context, ref, appt),
-                ),
-              )),
+          const SectionHeader(title: 'Your Appointments'),
+          const SizedBox(height: AppSpacing.md),
+          if (appointments.isEmpty)
+            const EmptyState(
+              icon: Icons.event_available_outlined,
+              message: 'No appointments scheduled.',
+            )
+          else
+            ...appointments.asMap().entries.map((entry) => EntranceSlide(
+                  index: entry.key,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: _AppointmentListTile(
+                      appointment: entry.value,
+                      onTap: () => _showDetailSheet(context, ref, entry.value),
+                    ),
+                  ),
+                )),
           const SizedBox(height: 24),
         ],
       ),
@@ -68,9 +79,6 @@ class AppointmentsScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => _AppointmentDetailSheet(appointment: appt, ref: ref),
     );
   }
@@ -101,8 +109,8 @@ class _AppointmentListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dt = appointment.dateTime;
-    final dateStr = '${_monthName(dt.month)} ${dt.day}, ${dt.year}';
-    final timeStr = _formatTime(dt);
+    final dateStr = formatShortDate(dt);
+    final timeStr = formatTime(dt);
 
     return Semantics(
       button: true,
@@ -189,8 +197,8 @@ class _AppointmentDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dt = appointment.dateTime;
-    final dateStr = '${_monthName(dt.month)} ${dt.day}, ${dt.year}';
-    final timeStr = _formatTime(dt);
+    final dateStr = formatShortDate(dt);
+    final timeStr = formatTime(dt);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -264,8 +272,8 @@ class _AppointmentDetailSheet extends StatelessWidget {
                 label: const Text('Cancel Appointment'),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 52),
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
+                  foregroundColor: AppColors.danger,
+                  side: const BorderSide(color: AppColors.danger),
                 ),
               ),
             ),
@@ -275,16 +283,4 @@ class _AppointmentDetailSheet extends StatelessWidget {
       ),
     );
   }
-}
-
-String _monthName(int month) {
-  const names = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return names[month];
-}
-
-String _formatTime(DateTime dt) {
-  final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
-  final m = dt.minute.toString().padLeft(2, '0');
-  final period = dt.hour >= 12 ? 'PM' : 'AM';
-  return '$h:$m $period';
 }

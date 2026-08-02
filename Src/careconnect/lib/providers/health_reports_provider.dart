@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/health_report.dart';
+import '../utils/formatting.dart';
 
 class HealthReportsState {
   final List<HealthReport> reports;
@@ -30,7 +31,7 @@ class HealthReportsNotifier extends Notifier<HealthReportsState> {
     await Future.delayed(const Duration(seconds: 2));
     final now = DateTime.now();
     final title = switch (type) {
-      ReportType.monthly   => 'Monthly Summary - ${_monthName(now.month)} ${now.year}',
+      ReportType.monthly   => 'Monthly Summary - ${monthName(now.month)} ${now.year}',
       ReportType.quarterly => 'Quarterly Report - Q${((now.month - 1) ~/ 3) + 1} ${now.year}',
       ReportType.custom    => 'Custom Report - ${now.month}/${now.day}/${now.year}',
     };
@@ -49,14 +50,6 @@ class HealthReportsNotifier extends Notifier<HealthReportsState> {
   void shareReport(String id) {
     // Mock
   }
-}
-
-String _monthName(int month) {
-  const names = [
-    '', 'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-  return names[month];
 }
 
 final _mockReports = [

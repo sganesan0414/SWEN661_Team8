@@ -497,21 +497,14 @@ class _PrescriptionCardBody extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => _PrescriptionDetailSheet(med: med, ext: ext),
     );
   }
 
   void _showDirections(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Directions to ${ext.pharmacyName}: ${ext.pharmacyAddress}'),
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+    showAppSnackBar(
+      context,
+      'Directions to ${ext.pharmacyName}: ${ext.pharmacyAddress}',
     );
   }
 
@@ -911,14 +904,8 @@ class _PharmacyCard extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Directions to $name: $address'),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
+                  onPressed: () =>
+                      showAppSnackBar(context, 'Directions to $name: $address'),
                   icon: const Icon(Icons.directions, size: 18),
                   label: const Text('Directions'),
                   style: ElevatedButton.styleFrom(
@@ -931,7 +918,7 @@ class _PharmacyCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => showComingSoon(context, 'Calling a pharmacy'),
                   icon: const Icon(Icons.call, size: 18),
                   label: const Text('Call'),
                   style: OutlinedButton.styleFrom(

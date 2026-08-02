@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_theme.dart';
 import '../components/widgets.dart';
 import '../models/health_metric.dart';
 import '../providers/health_metrics_provider.dart';
+import '../utils/formatting.dart';
 
 class HealthMetricsScreen extends ConsumerStatefulWidget {
   const HealthMetricsScreen({super.key});
@@ -25,16 +27,27 @@ class _HealthMetricsScreenState extends ConsumerState<HealthMetricsScreen> {
   }
 
   Future<void> _saveReading() async {
-    if (_saveCooling || _selectedMetricId == null || _valueController.text.isEmpty) return;
-    final value = double.tryParse(_valueController.text);
-    if (value == null) return;
+    if (_saveCooling) return;
+
+    if (_selectedMetricId == null) {
+      showAppSnackBar(context, 'Choose which metric this reading is for.');
+      return;
+    }
+    final value = double.tryParse(_valueController.text.trim());
+    if (value == null) {
+      showAppSnackBar(context, 'Enter a reading as a number, for example 120.');
+      return;
+    }
 
     setState(() => _saveCooling = true);
     HapticFeedback.mediumImpact();
 
     await ref.read(healthMetricsProvider.notifier).addReading(_selectedMetricId!, value);
 
+    if (!mounted) return;
     _valueController.clear();
+    showAppSnackBar(context, 'Reading saved.');
+
     await Future.delayed(const Duration(milliseconds: 1500));
     if (mounted) setState(() => _saveCooling = false);
   }
@@ -43,6 +56,7 @@ class _HealthMetricsScreenState extends ConsumerState<HealthMetricsScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(healthMetricsProvider);
     final metrics = state.metrics;
+    final isSaving = state.isAddingReading || _saveCooling;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -52,14 +66,14 @@ class _HealthMetricsScreenState extends ConsumerState<HealthMetricsScreen> {
           label: 'Home',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        leadingWidth: 160,
+        leadingWidth: AppSizing.backButtonWidth,
       ),
       body: Column(
         children: [
           const ContextBar(screenLabel: 'Home › Health Metrics'),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: AppSpacing.screen,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -74,7 +88,7 @@ class _HealthMetricsScreenState extends ConsumerState<HealthMetricsScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  Text('Add Reading', style: AppTextStyles.headlineMedium),
+                  const SectionHeader(title: 'Add Reading'),
                   const SizedBox(height: 12),
                   Semantics(
                     label: 'Select metric for new reading',
@@ -107,17 +121,17 @@ class _HealthMetricsScreenState extends ConsumerState<HealthMetricsScreen> {
                     button: true,
                     label: 'Save reading',
                     child: ElevatedButton.icon(
-                      onPressed: _saveCooling ? null : _saveReading,
-                      icon: state.isAddingReading
+                      onPressed: isSaving ? null : _saveReading,
+                      icon: isSaving
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : const Icon(Icons.save_outlined),
-                      label: Text(state.isAddingReading ? 'Saving…' : 'Save Reading'),
+                      label: Text(isSaving ? 'Saving…' : 'Save Reading'),
                       style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 52)),
                     ),
                   ),
 
                   const SizedBox(height: 24),
-                  Text('Recent Readings', style: AppTextStyles.headlineMedium),
+                  const SectionHeader(title: 'Recent Readings'),
                   const SizedBox(height: 12),
                   ...metrics.expand((m) => m.history.reversed.take(3).map((r) => _ReadingRow(metric: m, reading: r))),
                   const SizedBox(height: 24),
@@ -139,7 +153,7 @@ class _VitalCard extends StatelessWidget {
     return switch (metric.status) {
       MetricStatus.normal   => AppColors.success,
       MetricStatus.warning  => AppColors.warning,
-      MetricStatus.critical => Colors.red,
+      MetricStatus.critical => AppColors.danger,
     };
   }
 
@@ -211,12 +225,16 @@ class _Sparkline extends StatelessWidget {
     return ExcludeSemantics(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: last7.map((r) {
           final normalized = range == 0 ? 0.5 : (r.value - minV) / range;
-          final height = 4.0 + normalized * 12;
-          return Container(
+          // Bars grow to their new height when a reading is added, so the
+          // trend visibly updates rather than redrawing between frames.
+          return AnimatedContainer(
+            duration: context.motion(AppDurations.slow),
+            curve: AppCurves.standard,
             width: 6,
-            height: height,
+            height: 4.0 + normalized * 12,
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.5 + normalized * 0.5),
               borderRadius: BorderRadius.circular(3),
@@ -236,7 +254,7 @@ class _ReadingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dt = reading.timestamp;
-    final dateStr = '${dt.month}/${dt.day}/${dt.year}';
+    final dateStr = formatNumericDate(dt);
     final valueStr = reading.secondaryValue != null
         ? '${reading.value.toStringAsFixed(0)}/${reading.secondaryValue}'
         : reading.value.toString();

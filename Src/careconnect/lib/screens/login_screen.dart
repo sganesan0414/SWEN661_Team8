@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import '../theme/app_theme.dart';
+import '../components/widgets.dart';
 import '../providers/account_provider.dart';
 import 'dashboard_screen.dart';
 import 'pin_screen.dart';
@@ -44,9 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final canCheck = await auth.canCheckBiometrics;
     if (!canCheck) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$method not available on this device')),
-      );
+      showAppSnackBar(context, '$method not available on this device');
       return;
     }
     final didAuth = await auth.authenticate(
@@ -58,9 +57,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(accountProvider.notifier).signInTrusted();
       if (mounted) _goToDashboard();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$method authentication failed')),
-      );
+      showAppSnackBar(context, '$method authentication failed');
     }
   }
 
@@ -72,12 +69,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!mounted || resetEmail == null) return;
     // Pre-fill the email so the user can sign in immediately with the new password.
     _emailController.text = resetEmail;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Password reset. Please sign in with your new password.'),
-        duration: Duration(seconds: 3),
-      ),
-    );
+    showAppSnackBar(context, 'Password reset. Please sign in with your new password.');
   }
 
   Future<void> _handleSignIn() async {
@@ -90,18 +82,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         .signIn(_emailController.text, _passwordController.text);
 
     if (mounted && error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), duration: const Duration(seconds: 2)),
-      );
+      showAppSnackBar(context, error, duration: const Duration(seconds: 2));
     }
 
     await Future.delayed(const Duration(milliseconds: 1500));
     if (mounted) setState(() => _buttonCooling = false);
-  }
-
-  @override
-  void initState() {
-    super.initState();
   }
 
   @override
@@ -116,13 +101,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen<AccountState>(accountProvider, (previous, next) {
-      if (!previous!.isLoggedIn && next.isLoggedIn) {
+      // `previous` is nullable and was dereferenced with `!`, which throws on
+      // the first emission if the provider had no prior value.
+      if (previous?.isLoggedIn != true && next.isLoggedIn) {
         _goToDashboard();
       }
     });
 
     final account = ref.watch(accountProvider);
-    final isLoading = account.isLoading;
+    // Busy while either the provider is working or the local tap cooldown is
+    // active, so the spinner, the label and the disabled state never disagree.
+    final isBusy = account.isLoading || _buttonCooling;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -260,15 +249,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Semantics(
                 button: true,
                 label: 'Sign in to your account',
+                // One flag drives the spinner, the label and the disabled
+                // state. Previously the label used `_buttonCooling || isLoading`
+                // while `onPressed` checked only `_buttonCooling`, so the button
+                // could read "Signing in…" and still accept another tap.
                 child: ElevatedButton.icon(
-                  onPressed: _buttonCooling ? null : _handleSignIn,
-                  icon: isLoading
+                  onPressed: isBusy ? null : _handleSignIn,
+                  icon: isBusy
                       ? const SizedBox(
                           width: 20, height: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
                       : const Icon(Icons.login_outlined),
-                  label: Text((_buttonCooling || isLoading) ? 'Signing in…' : 'Sign In'),
+                  label: Text(isBusy ? 'Signing in…' : 'Sign In'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 58),
                     textStyle: AppTextStyles.titleLarge,
@@ -294,7 +287,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 alignment: WrapAlignment.end,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text('Dont have an account? ', style: AppTextStyles.bodyMedium),
+                  Text("Don't have an account? ", style: AppTextStyles.bodyMedium),
                   TextButton(
                     onPressed: () => _goToCreateAccount(),
                     style: TextButton.styleFrom(
@@ -308,7 +301,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 8),
               TextButton.icon(
-                onPressed: () {},
+                onPressed: () => showComingSoon(context, 'Contacting your caregiver'),
                 icon: const Icon(Icons.people_outline, size: 20),
                 label: const Text('Need help? Contact my Caregiver'),
                 style: TextButton.styleFrom(
@@ -456,7 +449,7 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
                 liveRegion: true,
                 child: Text(
                   _error!,
-                  style: AppTextStyles.bodyMedium.copyWith(color: Colors.red),
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.danger),
                 ),
               ),
             ],

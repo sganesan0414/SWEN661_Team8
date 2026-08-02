@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:careconnect/main.dart';
 import 'package:careconnect/providers/appointments_provider.dart';
+import 'package:careconnect/utils/formatting.dart';
 import 'mocks.dart';
 
 // Boots the real app entry point (MyApp) instead of pumping a screen in
@@ -72,7 +73,10 @@ void main() {
 
     // Lands on DashboardScreen, Home tab.
     expect(find.text('CareConnect'), findsOneWidget);
-    expect(find.textContaining('Good Morning, Siva'), findsOneWidget);
+    // The greeting tracks the clock, so derive the expected text the same way
+    // the dashboard does rather than pinning it to one time of day.
+    final expectedGreeting = '${greetingForHour(DateTime.now().hour)}, Siva';
+    expect(find.textContaining(expectedGreeting), findsOneWidget);
 
     // Push a sub-screen via a Quick Action, then navigate back.
     await tester.ensureVisible(find.text('Health\nMetrics'));
@@ -84,12 +88,14 @@ void main() {
     expect(find.text('CareConnect'), findsOneWidget);
 
     // Dashboard -> Profile (tap the greeting), then navigate back.
-    final greeting = find.text('Good Morning, Siva');
+    final greeting = find.text(expectedGreeting);
     await tester.ensureVisible(greeting);
     await tester.tap(greeting);
     await tester.pumpAndSettle();
     expect(find.text('Profile'), findsWidgets);
-    await tester.pageBack();
+    // Profile now uses the app's LabeledBackButton like every other pushed
+    // screen, so there is no bare Material BackButton for pageBack() to find.
+    await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
     expect(find.text('CareConnect'), findsOneWidget);
 

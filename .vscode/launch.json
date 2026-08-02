@@ -6,20 +6,20 @@
     "configurations": [
         {
             "name": "careconnect",
-            "cwd": "Src\\careconnect",
+            "cwd": "Src/careconnect",
             "request": "launch",
             "type": "dart"
         },
         {
             "name": "careconnect (profile mode)",
-            "cwd": "Src\\careconnect",
+            "cwd": "Src/careconnect",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
             "name": "careconnect (release mode)",
-            "cwd": "Src\\careconnect",
+            "cwd": "Src/careconnect",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
